@@ -11,16 +11,23 @@ import { format } from "date-fns";
 import generatedLogo from "@assets/generated_images/minimalist_geometric_construction_logo.png";
 
 export default function PayrollSlip() {
-  const [, params] = useRoute("/admin/payroll/:id");
-  const { payrolls, users, config } = useApp();
+  const [matchAdmin, paramsAdmin] = useRoute("/admin/payroll/:id");
+  const [matchEmp, paramsEmp] = useRoute("/employee/payslips/:id");
+  
+  const { payrolls, users, config, user: currentUser } = useApp();
   const slipRef = useRef<HTMLDivElement>(null);
 
-  const id = params?.id;
+  const id = matchAdmin ? paramsAdmin?.id : paramsEmp?.id;
   const payroll = payrolls.find(p => p.id === id);
-  const user = users.find(u => u.id === payroll?.userId);
+  const employee = users.find(u => u.id === payroll?.userId);
 
-  if (!payroll || !user) {
-    return <div>Payslip not found</div>;
+  // Security check for employee view
+  if (matchEmp && currentUser?.role !== 'admin' && currentUser?.id !== payroll?.userId) {
+     return <div className="p-8 text-center text-red-500">Unauthorized access to this payslip.</div>;
+  }
+
+  if (!payroll || !employee) {
+    return <div className="p-8 text-center text-slate-500">Payslip not found</div>;
   }
 
   const formatIDR = (num: number) => {
@@ -45,8 +52,8 @@ export default function PayrollSlip() {
     autoTable(doc, {
       startY: 50,
       body: [
-        ['Nama', user.name, 'Jabatan', user.position],
-        ['NIK', user.id, 'Status', 'Karyawan Tetap'],
+        ['Nama', employee.name, 'Jabatan', employee.position],
+        ['NIK', employee.id, 'Status', 'Karyawan Tetap'],
       ],
       theme: 'plain',
       styles: { fontSize: 10, cellPadding: 1 },
@@ -102,14 +109,14 @@ export default function PayrollSlip() {
     doc.text("Dibuat Oleh,", 140, finalY + 30);
     doc.text("( Admin HRD )", 140, finalY + 50);
 
-    doc.save(`slip_gaji_${user.name}_${payroll.period}.pdf`);
+    doc.save(`slip_gaji_${employee.name}_${payroll.period}.pdf`);
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between no-print">
         <div className="flex items-center gap-4">
-          <Link href="/admin/payroll">
+          <Link href={matchAdmin ? "/admin/payroll" : "/employee/payslips"}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -149,15 +156,15 @@ export default function PayrollSlip() {
             <div className="space-y-1">
               <div className="flex justify-between border-b border-slate-100 py-1">
                 <span className="text-slate-500">Nama Karyawan</span>
-                <span className="font-semibold">{user.name}</span>
+                <span className="font-semibold">{employee.name}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 py-1">
                 <span className="text-slate-500">ID Karyawan</span>
-                <span className="font-medium">{user.id}</span>
+                <span className="font-medium">{employee.id}</span>
               </div>
               <div className="flex justify-between border-b border-slate-100 py-1">
                 <span className="text-slate-500">Jabatan</span>
-                <span className="font-medium">{user.position}</span>
+                <span className="font-medium">{employee.position}</span>
               </div>
             </div>
             <div className="space-y-1">
@@ -236,7 +243,7 @@ export default function PayrollSlip() {
           <div className="pt-12 grid grid-cols-2 gap-8">
             <div className="text-center">
               <p className="text-sm text-slate-500 mb-20">Penerima,</p>
-              <p className="font-bold border-t border-slate-300 inline-block px-8 pt-2">{user.name}</p>
+              <p className="font-bold border-t border-slate-300 inline-block px-8 pt-2">{employee.name}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-slate-500 mb-20">Mengetahui,</p>

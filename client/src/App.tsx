@@ -17,6 +17,7 @@ import PayrollSlip from "@/pages/payroll-slip";
 import AttendanceCapture from "@/pages/attendance-capture";
 import EmployeeDashboard from "@/pages/employee-dashboard";
 import EmployeeLeave from "@/pages/employee-leave";
+import EmployeePayslips from "@/pages/employee-payslips";
 import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
@@ -41,7 +42,8 @@ function Router() {
         <Route path="/employee" component={EmployeeDashboard} />
         <Route path="/employee/attendance" component={AttendanceCapture} />
         <Route path="/employee/leave" component={EmployeeLeave} />
-        <Route path="/employee/payslips" component={() => <div>My Payslips (Mock)</div>} />
+        <Route path="/employee/payslips" component={EmployeePayslips} />
+        <Route path="/employee/payslips/:id" component={PayrollSlip} />
 
         {/* Shared */}
         <Route path="/profile" component={ProfilePage} />
