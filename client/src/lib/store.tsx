@@ -1,81 +1,97 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { addDays, format, differenceInMinutes, startOfMonth, endOfMonth, isWithinInterval, subMonths } from "date-fns";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { format, subMonths } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "./queryClient";
 
 // --- Types ---
 
 export type Role = "admin" | "employee";
 
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: Role;
-  position: string;
-  joinDate: string;
-  password?: string; // In a real app, this would be hashed.
-  avatar?: string;
+  positionId?: number | null;
+  position?: string;
+  joinDate?: string | null;
+  password?: string;
+  avatar?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  status?: string;
 }
 
 export interface AttendanceRecord {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  clockIn?: string; // ISO string
-  clockOut?: string; // ISO string
-  clockInPhoto?: string;
-  clockOutPhoto?: string;
+  id: number;
+  userId: number;
+  date: string;
+  clockIn?: string | null;
+  clockOut?: string | null;
+  clockInPhoto?: string | null;
+  clockOutPhoto?: string | null;
+  clockInLat?: string | null;
+  clockInLng?: string | null;
+  clockOutLat?: string | null;
+  clockOutLng?: string | null;
   clockInLocation?: { lat: number; lng: number; address?: string };
   clockOutLocation?: { lat: number; lng: number; address?: string };
   status: "present" | "late" | "absent" | "leave" | "sick";
   approvalStatus: "pending" | "approved" | "rejected";
-  notes?: string;
+  notes?: string | null;
   isWithinGeofenceIn?: boolean;
   isWithinGeofenceOut?: boolean;
 }
 
 export interface LeaveRequest {
-  id: string;
-  userId: string;
+  id: number;
+  userId: number;
   type: "annual" | "sick" | "other";
   startDate: string;
   endDate: string;
-  reason: string;
+  reason?: string | null;
   status: "pending" | "approved" | "rejected";
-  attachment?: string;
+  attachment?: string | null;
+  approvedBy?: number | null;
 }
 
 export interface PayrollRecord {
-  id: string;
-  userId: string;
-  period: string; // YYYY-MM
+  id: number;
+  userId: number;
+  period: string;
   basicSalary: number;
   overtimePay: number;
   bonus: number;
+  lateDeduction: number;
+  bpjsDeduction: number;
+  pph21Deduction: number;
+  otherDeduction: number;
   deductions: {
     late: number;
-    bpjs: number; // Employee share
+    bpjs: number;
     pph21: number;
     other: number;
   };
   totalNet: number;
   status: "draft" | "final";
-  generatedAt: string;
+  generatedAt?: string;
 }
 
 export interface JobPosition {
+  id?: number;
   title: string;
   hourlyRate: number;
+  description?: string | null;
 }
 
 export interface AppConfig {
   officeLat: number;
   officeLng: number;
-  geofenceRadius: number; // meters
+  geofenceRadius: number;
   latePenaltyPerMinute: number;
   breakDurationMinutes: number;
-  bpjsKesehatanRate: number; // Employee share (1%)
-  bpjsKetenagakerjaanRate: number; // Employee share (2% JHT)
+  bpjsKesehatanRate: number;
+  bpjsKetenagakerjaanRate: number;
   companyName: string;
   companyAddress: string;
   vision?: string;
@@ -83,128 +99,26 @@ export interface AppConfig {
   history?: string;
 }
 
-// --- Constants & Seed Data ---
-
-const OFFICE_LOCATION = {
-  lat: -2.9795731113284303,
-  lng: 104.73111003716011,
-};
-
-const POSITIONS: JobPosition[] = [
-  { title: "Kepala Proyek Manajer", hourlyRate: 75000 },
-  { title: "Manajer", hourlyRate: 60000 },
-  { title: "Arsitek", hourlyRate: 60000 },
-  { title: "Wakil Kepala Proyek", hourlyRate: 50000 },
-  { title: "Kepala Pengawasan", hourlyRate: 45000 },
-  { title: "Staff Pengawasan", hourlyRate: 35000 },
-  { title: "CMO", hourlyRate: 50000 },
-  { title: "Admin", hourlyRate: 30000 },
-  { title: "Staff Marketing", hourlyRate: 30000 },
-  { title: "OB", hourlyRate: 12000 },
-];
-
-const SEED_USERS: User[] = [
-  {
-    id: "admin-1",
-    name: "Administrator",
-    email: "admin@panca.test",
-    role: "admin",
-    position: "Admin",
-    joinDate: "2020-01-01",
-    password: "password",
-  },
-  {
-    id: "emp-1",
-    name: "Budi Santoso",
-    email: "budi@panca.test",
-    role: "employee",
-    position: "Kepala Proyek Manajer",
-    joinDate: "2021-03-15",
-    password: "password",
-  },
-  {
-    id: "emp-2",
-    name: "Siti Aminah",
-    email: "siti@panca.test",
-    role: "employee",
-    position: "Arsitek",
-    joinDate: "2022-06-10",
-    password: "password",
-  },
-  {
-    id: "emp-3",
-    name: "Rudi Hartono",
-    email: "rudi@panca.test",
-    role: "employee",
-    position: "Staff Pengawasan",
-    joinDate: "2023-01-20",
-    password: "password",
-  },
-  {
-    id: "emp-4",
-    name: "Dewi Lestari",
-    email: "dewi@panca.test",
-    role: "employee",
-    position: "Staff Marketing",
-    joinDate: "2023-05-05",
-    password: "password",
-  },
-  {
-    id: "emp-5",
-    name: "Joko Anwar",
-    email: "joko@panca.test",
-    role: "employee",
-    position: "OB",
-    joinDate: "2023-11-01",
-    password: "password",
-  },
-];
-
-// Generate simple attendance history for demo
-const generateHistory = () => {
-  const records: AttendanceRecord[] = [];
-  const today = new Date();
-  
-  SEED_USERS.slice(1).forEach(user => {
-    for (let i = 0; i < 5; i++) {
-      const date = subMonths(today, 0);
-      const day = addDays(date, -i);
-      
-      // Skip weekends (simplified)
-      if (day.getDay() === 0 || day.getDay() === 6) continue;
-      
-      const dateStr = format(day, "yyyy-MM-dd");
-      
-      // Randomize times
-      const entryHour = 7 + Math.random(); // 7:00 - 8:00
-      const exitHour = 16 + Math.random() * 2; // 16:00 - 18:00
-      
-      const clockIn = new Date(day);
-      clockIn.setHours(Math.floor(entryHour), Math.floor((entryHour % 1) * 60));
-      
-      const clockOut = new Date(day);
-      clockOut.setHours(Math.floor(exitHour), Math.floor((exitHour % 1) * 60));
-
-      records.push({
-        id: `att-${user.id}-${i}`,
-        userId: user.id,
-        date: dateStr,
-        clockIn: clockIn.toISOString(),
-        clockOut: clockOut.toISOString(),
-        status: "present",
-        approvalStatus: "approved",
-        isWithinGeofenceIn: true,
-        isWithinGeofenceOut: true,
-      });
-    }
-  });
-  return records;
+// --- Default Config ---
+const DEFAULT_CONFIG: AppConfig = {
+  officeLat: -2.9795731113284303,
+  officeLng: 104.73111003716011,
+  geofenceRadius: 100,
+  latePenaltyPerMinute: 2000,
+  breakDurationMinutes: 60,
+  bpjsKesehatanRate: 0.01,
+  bpjsKetenagakerjaanRate: 0.02,
+  companyName: "PT Panca Karya Utama",
+  companyAddress: "Jl. Konstruksi No. 123, Palembang",
+  vision: "Menjadi perusahaan konstruksi terkemuka yang terpercaya.",
+  mission: "Memberikan layanan berkualitas tinggi dan mengutamakan keselamatan kerja.",
+  history: "Didirikan pada tahun 2010, PT Panca Karya Utama telah mengerjakan berbagai proyek..."
 };
 
 // --- Utils ---
 
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  var R = 6371; // Radius of the earth in km
+  var R = 6371;
   var dLat = deg2rad(lat2 - lat1);
   var dLon = deg2rad(lon2 - lon1);
   var a =
@@ -212,12 +126,58 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
     Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c; // Distance in km
-  return d * 1000; // Return meters
+  var d = R * c;
+  return d * 1000;
 }
 
 function deg2rad(deg: number) {
   return deg * (Math.PI / 180);
+}
+
+// Helper to normalize attendance records from API
+function normalizeAttendance(record: any): AttendanceRecord {
+  return {
+    ...record,
+    date: typeof record.date === 'string' ? record.date.split('T')[0] : record.date,
+    clockIn: record.clockIn || record.clock_in,
+    clockOut: record.clockOut || record.clock_out,
+    clockInPhoto: record.clockInPhoto || record.clock_in_photo,
+    clockOutPhoto: record.clockOutPhoto || record.clock_out_photo,
+    isWithinGeofenceIn: record.isWithinGeofenceIn ?? record.is_within_geofence_in ?? false,
+    isWithinGeofenceOut: record.isWithinGeofenceOut ?? record.is_within_geofence_out ?? false,
+    clockInLocation: record.clockInLat ? { lat: parseFloat(record.clockInLat), lng: parseFloat(record.clockInLng) } : undefined,
+    clockOutLocation: record.clockOutLat ? { lat: parseFloat(record.clockOutLat), lng: parseFloat(record.clockOutLng) } : undefined,
+    approvalStatus: record.approvalStatus || record.approval_status || 'pending',
+  };
+}
+
+// Helper to normalize payroll records from API
+function normalizePayroll(record: any): PayrollRecord {
+  return {
+    ...record,
+    deductions: {
+      late: record.lateDeduction || record.late_deduction || 0,
+      bpjs: record.bpjsDeduction || record.bpjs_deduction || 0,
+      pph21: record.pph21Deduction || record.pph21_deduction || 0,
+      other: record.otherDeduction || record.other_deduction || 0,
+    },
+    basicSalary: record.basicSalary || record.basic_salary || 0,
+    overtimePay: record.overtimePay || record.overtime_pay || 0,
+    totalNet: record.totalNet || record.total_net || 0,
+    generatedAt: record.generatedAt || record.generated_at,
+  };
+}
+
+// Helper to normalize leave records
+function normalizeLeave(record: any): LeaveRequest {
+  return {
+    ...record,
+    startDate: typeof record.startDate === 'string' ? record.startDate.split('T')[0] : 
+               typeof record.start_date === 'string' ? record.start_date.split('T')[0] : record.startDate,
+    endDate: typeof record.endDate === 'string' ? record.endDate.split('T')[0] : 
+             typeof record.end_date === 'string' ? record.end_date.split('T')[0] : record.endDate,
+    approvedBy: record.approvedBy || record.approved_by,
+  };
 }
 
 // --- Context ---
@@ -230,331 +190,296 @@ interface AppContextType {
   leaves: LeaveRequest[];
   payrolls: PayrollRecord[];
   config: AppConfig;
-  login: (email: string) => void;
+  isLoading: boolean;
+  login: (email: string) => Promise<void>;
   logout: () => void;
   clockIn: (lat: number, lng: number, photo: string) => Promise<void>;
   clockOut: (lat: number, lng: number, photo: string) => Promise<void>;
-  requestLeave: (data: Omit<LeaveRequest, "id" | "status" | "userId">) => void;
-  updateConfig: (newConfig: Partial<AppConfig>) => void;
-  approveAttendance: (id: string, status: "approved" | "rejected") => void;
-  approveLeave: (id: string, status: "approved" | "rejected") => void;
-  addPosition: (position: JobPosition) => void;
-  deletePosition: (title: string) => void;
-  generatePayroll: (period: string) => void;
-  updateUser: (id: string, data: Partial<User>) => void;
-  finalizePayroll: (id: string) => void;
+  requestLeave: (data: Omit<LeaveRequest, "id" | "status" | "userId">) => Promise<void>;
+  updateConfig: (newConfig: Partial<AppConfig>) => Promise<void>;
+  approveAttendance: (id: number, status: "approved" | "rejected") => Promise<void>;
+  approveLeave: (id: number, status: "approved" | "rejected") => Promise<void>;
+  addPosition: (position: JobPosition) => Promise<void>;
+  deletePosition: (id: number) => Promise<void>;
+  generatePayroll: (period: string) => Promise<void>;
+  updateUser: (id: number, data: Partial<User>) => Promise<void>;
+  finalizePayroll: (id: number) => Promise<void>;
+  createUser: (data: Omit<User, "id">) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(SEED_USERS);
-  const [positions, setPositions] = useState<JobPosition[]>(POSITIONS);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(generateHistory());
+  const [users, setUsers] = useState<User[]>([]);
+  const [positions, setPositions] = useState<JobPosition[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
-  
-  // Seed some payrolls for demo
-  const [payrolls, setPayrolls] = useState<PayrollRecord[]>(() => {
-     const records: PayrollRecord[] = [];
-     const lastMonth = format(subMonths(new Date(), 1), "yyyy-MM");
-     
-     SEED_USERS.slice(1).forEach(u => {
-        const position = POSITIONS.find(p => p.title === u.position);
-        const rate = position ? position.hourlyRate : 0;
-        const basic = rate * 173; // Full month assumption
-        const net = basic * 0.95; // Rough calc
-        
-        records.push({
-           id: `pr-${u.id}-${lastMonth}`,
-           userId: u.id,
-           period: lastMonth,
-           basicSalary: basic,
-           overtimePay: 0,
-           bonus: 0,
-           deductions: { late: 0, bpjs: basic * 0.03, pph21: basic * 0.02, other: 0 },
-           totalNet: net,
-           status: "final",
-           generatedAt: new Date().toISOString()
-        });
-     });
-     return records;
-  });
+  const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [config, setConfig] = useState<AppConfig>({
-    officeLat: OFFICE_LOCATION.lat,
-    officeLng: OFFICE_LOCATION.lng,
-    geofenceRadius: 100,
-    latePenaltyPerMinute: 2000,
-    breakDurationMinutes: 60,
-    bpjsKesehatanRate: 0.01,
-    bpjsKetenagakerjaanRate: 0.02,
-    companyName: "PT Panca Karya Utama",
-    companyAddress: "Jl. Konstruksi No. 123, Palembang",
-    vision: "Menjadi perusahaan konstruksi terkemuka yang terpercaya.",
-    mission: "Memberikan layanan berkualitas tinggi dan mengutamakan keselamatan kerja.",
-    history: "Didirikan pada tahun 2010, PT Panca Karya Utama telah mengerjakan berbagai proyek..."
-  });
+  // Fetch all data from API
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      const [usersRes, positionsRes, attendanceRes, leavesRes, payrollsRes, configRes] = await Promise.all([
+        fetch('/api/users').then(r => r.json()).catch(() => []),
+        fetch('/api/positions').then(r => r.json()).catch(() => []),
+        fetch('/api/attendance').then(r => r.json()).catch(() => []),
+        fetch('/api/leaves').then(r => r.json()).catch(() => []),
+        fetch('/api/payroll').then(r => r.json()).catch(() => []),
+        fetch('/api/config').then(r => r.json()).catch(() => ({})),
+      ]);
 
-  const login = (email: string) => {
-    const found = users.find((u) => u.email === email);
-    if (found) {
-      setUser(found);
-      toast({ title: "Welcome back!", description: `Logged in as ${found.name}` });
-    } else {
-      toast({ title: "Login Failed", description: "User not found", variant: "destructive" });
+      // Merge position titles into users
+      const usersWithPositions = usersRes.map((u: any) => {
+        const pos = positionsRes.find((p: any) => p.id === u.positionId);
+        return {
+          ...u,
+          position: pos?.title || u.position || 'Unknown',
+          joinDate: u.joinDate ? u.joinDate.split('T')[0] : u.join_date?.split('T')[0],
+        };
+      });
+
+      setUsers(usersWithPositions);
+      setPositions(positionsRes);
+      setAttendance(attendanceRes.map(normalizeAttendance));
+      setLeaves(leavesRes.map(normalizeLeave));
+      setPayrolls(payrollsRes.map(normalizePayroll));
+      
+      // Merge config
+      if (configRes && typeof configRes === 'object') {
+        setConfig(prev => ({
+          ...prev,
+          companyName: configRes.companyName || prev.companyName,
+          companyAddress: configRes.companyAddress || prev.companyAddress,
+          officeLat: parseFloat(configRes.officeLat) || prev.officeLat,
+          officeLng: parseFloat(configRes.officeLng) || prev.officeLng,
+          geofenceRadius: parseInt(configRes.geofenceRadius) || prev.geofenceRadius,
+          latePenaltyPerMinute: parseInt(configRes.latePenaltyPerMinute) || prev.latePenaltyPerMinute,
+          breakDurationMinutes: parseInt(configRes.breakDurationMinutes) || prev.breakDurationMinutes,
+          bpjsKesehatanRate: parseFloat(configRes.bpjsKesehatanRate) || prev.bpjsKesehatanRate,
+          bpjsKetenagakerjaanRate: parseFloat(configRes.bpjsKetenagakerjaanRate) || prev.bpjsKetenagakerjaanRate,
+          vision: configRes.vision || prev.vision,
+          mission: configRes.mission || prev.mission,
+          history: configRes.history || prev.history,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+      toast({ title: "Error", description: "Failed to load data from server", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const refreshData = async () => {
+    await fetchData();
+  };
+
+  const login = async (email: string) => {
+    try {
+      const response = await apiRequest('POST', '/api/auth/login', { email, password: 'password' });
+      const userData = await response.json();
+      
+      // Add position title
+      const pos = positions.find(p => p.id === userData.positionId);
+      const userWithPosition = {
+        ...userData,
+        position: pos?.title || 'Unknown',
+      };
+      
+      setUser(userWithPosition);
+      toast({ title: "Welcome back!", description: `Logged in as ${userData.name}` });
+    } catch (error: any) {
+      toast({ title: "Login Failed", description: error.message || "Invalid credentials", variant: "destructive" });
     }
   };
 
   const logout = () => {
     setUser(null);
-    window.location.href = "/"; // Force redirect to login
+    window.location.href = "/";
   };
 
-  const updateUser = (id: string, data: Partial<User>) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...data } : u));
-    if (user?.id === id) {
-      setUser(prev => prev ? { ...prev, ...data } : null);
+  const createUser = async (data: Omit<User, "id">) => {
+    try {
+      const response = await apiRequest('POST', '/api/users', data);
+      const newUser = await response.json();
+      await fetchData();
+      toast({ title: "Success", description: "Employee created successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to create employee", variant: "destructive" });
+      throw error;
     }
-    toast({ title: "Profile Updated", description: "Changes saved successfully." });
   };
 
-  const finalizePayroll = (id: string) => {
-    setPayrolls(prev => prev.map(p => p.id === id ? { ...p, status: "final" } : p));
-    toast({ title: "Payroll Finalized", description: "Status updated to Final." });
+  const updateUser = async (id: number, data: Partial<User>) => {
+    try {
+      await apiRequest('PATCH', `/api/users/${id}`, data);
+      await fetchData();
+      
+      if (user?.id === id) {
+        setUser(prev => prev ? { ...prev, ...data } : null);
+      }
+      toast({ title: "Profile Updated", description: "Changes saved successfully." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update user", variant: "destructive" });
+    }
   };
 
+  const deleteUser = async (id: number) => {
+    try {
+      await apiRequest('DELETE', `/api/users/${id}`);
+      await fetchData();
+      toast({ title: "Success", description: "Employee deleted successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to delete employee", variant: "destructive" });
+    }
+  };
 
   const clockIn = async (lat: number, lng: number, photo: string) => {
     if (!user) return;
     
-    const dist = getDistanceFromLatLonInKm(lat, lng, config.officeLat, config.officeLng);
-    const isWithin = dist <= config.geofenceRadius;
-    const now = new Date();
-    
-    // Check if already clocked in today
-    const todayStr = format(now, "yyyy-MM-dd");
-    const existing = attendance.find(a => a.userId === user.id && a.date === todayStr);
-
-    if (existing) {
-      toast({ title: "Error", description: "You have already clocked in today", variant: "destructive" });
-      return;
+    try {
+      await apiRequest('POST', '/api/attendance/clock-in', {
+        userId: user.id,
+        lat,
+        lng,
+        photo,
+      });
+      
+      await fetchData();
+      
+      const dist = getDistanceFromLatLonInKm(lat, lng, config.officeLat, config.officeLng);
+      const isWithin = dist <= config.geofenceRadius;
+      
+      toast({ 
+        title: isWithin ? "Clock In Successful" : "Clock In (Outside Geofence)", 
+        description: isWithin ? "You are within the office area." : "Warning: You are outside the allowed radius.",
+        variant: isWithin ? "default" : "destructive"
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to clock in", variant: "destructive" });
     }
-
-    const newRecord: AttendanceRecord = {
-      id: `att-${Date.now()}`,
-      userId: user.id,
-      date: todayStr,
-      clockIn: now.toISOString(),
-      clockInLocation: { lat, lng },
-      clockInPhoto: photo,
-      status: "present", // Basic logic, refined later
-      approvalStatus: "pending",
-      isWithinGeofenceIn: isWithin,
-    };
-
-    setAttendance(prev => [...prev, newRecord]);
-    toast({ 
-      title: isWithin ? "Clock In Successful" : "Clock In (Outside Geofence)", 
-      description: isWithin ? "You are within the office area." : "Warning: You are outside the allowed radius.",
-      variant: isWithin ? "default" : "destructive"
-    });
   };
 
   const clockOut = async (lat: number, lng: number, photo: string) => {
     if (!user) return;
-    const now = new Date();
-    const todayStr = format(now, "yyyy-MM-dd");
     
-    const existing = attendance.find(a => a.userId === user.id && a.date === todayStr);
-    
-    if (!existing) {
-       toast({ title: "Error", description: "You haven't clocked in yet", variant: "destructive" });
-       return;
+    try {
+      await apiRequest('POST', '/api/attendance/clock-out', {
+        userId: user.id,
+        lat,
+        lng,
+        photo,
+      });
+      
+      await fetchData();
+      toast({ title: "Clock Out Successful", description: "See you tomorrow!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to clock out", variant: "destructive" });
     }
-
-    if (existing.clockOut) {
-       toast({ title: "Error", description: "Already clocked out", variant: "destructive" });
-       return;
-    }
-
-    const dist = getDistanceFromLatLonInKm(lat, lng, config.officeLat, config.officeLng);
-    const isWithin = dist <= config.geofenceRadius;
-
-    const updated = {
-      ...existing,
-      clockOut: now.toISOString(),
-      clockOutLocation: { lat, lng },
-      clockOutPhoto: photo,
-      isWithinGeofenceOut: isWithin,
-    };
-
-    setAttendance(prev => prev.map(a => a.id === existing.id ? updated : a));
-    toast({ title: "Clock Out Successful", description: "See you tomorrow!" });
   };
 
-  const requestLeave = (data: Omit<LeaveRequest, "id" | "status" | "userId">) => {
+  const requestLeave = async (data: Omit<LeaveRequest, "id" | "status" | "userId">) => {
     if (!user) return;
-    const newLeave: LeaveRequest = {
-      id: `leave-${Date.now()}`,
-      userId: user.id,
-      status: "pending",
-      ...data
-    };
-    setLeaves(prev => [...prev, newLeave]);
-    toast({ title: "Leave Requested", description: "Waiting for approval" });
-  };
-
-  const approveLeave = (id: string, status: "approved" | "rejected") => {
-    setLeaves(prev => prev.map(l => l.id === id ? { ...l, status } : l));
-    toast({ title: `Leave ${status}`, description: `Request has been ${status}.` });
-  };
-
-  const addPosition = (position: JobPosition) => {
-    setPositions(prev => [...prev, position]);
-    toast({ title: "Position Added", description: `${position.title} added successfully.` });
-  };
-
-  const deletePosition = (title: string) => {
-    setPositions(prev => prev.filter(p => p.title !== title));
-    toast({ title: "Position Deleted", description: "Position removed from master data." });
-  };
-
-  const updateConfig = (newConfig: Partial<AppConfig>) => {
-    setConfig(prev => ({ ...prev, ...newConfig }));
-    toast({ title: "Settings Saved", description: "Configuration updated." });
-  };
-
-  const approveAttendance = (id: string, status: "approved" | "rejected") => {
-    setAttendance(prev => prev.map(a => a.id === id ? { ...a, approvalStatus: status } : a));
-    toast({ title: `Attendance ${status}`, description: `Record has been ${status}.` });
-  };
-
-  // --- SIMPLE PAYROLL ENGINE ---
-  const generatePayroll = (period: string) => {
-    // Period format YYYY-MM
-    // 1. Get all employees
-    // 2. For each employee, calculate work hours, overtime, penalties
     
-    const newPayrolls: PayrollRecord[] = [];
-    
-    users.filter(u => u.role !== 'admin').forEach(u => { // Skip admin for payroll demo usually
-       const position = positions.find(p => p.title === u.position);
-       const hourlyRate = position ? position.hourlyRate : 0;
-       
-       // Filter attendance for this user in this period
-       const userAttendance = attendance.filter(a => 
-         a.userId === u.id && 
-         a.date.startsWith(period) &&
-         a.approvalStatus === "approved" &&
-         a.clockIn && a.clockOut
-       );
+    try {
+      await apiRequest('POST', '/api/leaves', {
+        userId: user.id,
+        ...data,
+        status: 'pending',
+      });
+      
+      await fetchData();
+      toast({ title: "Leave Requested", description: "Waiting for approval" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to submit leave request", variant: "destructive" });
+    }
+  };
 
-       let totalWorkMinutes = 0;
-       let totalOvertimeMinutes = 0;
-       let totalLateMinutes = 0;
+  const approveLeave = async (id: number, status: "approved" | "rejected") => {
+    try {
+      await apiRequest('POST', `/api/leaves/${id}/approve`, {
+        status,
+        approvedBy: user?.id,
+      });
+      
+      await fetchData();
+      toast({ title: `Leave ${status}`, description: `Request has been ${status}.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update leave status", variant: "destructive" });
+    }
+  };
 
-       userAttendance.forEach(att => {
-          if (!att.clockIn || !att.clockOut) return;
-          const start = new Date(att.clockIn);
-          const end = new Date(att.clockOut);
-          
-          // Lateness
-          const workStart = new Date(att.date + "T08:00:00");
-          const lateThreshold = new Date(att.date + "T08:10:00");
-          
-          if (start > lateThreshold) {
-            const diffMs = start.getTime() - workStart.getTime();
-            totalLateMinutes += Math.floor(diffMs / 60000);
-          }
+  const approveAttendance = async (id: number, status: "approved" | "rejected") => {
+    try {
+      await apiRequest('PATCH', `/api/attendance/${id}`, { approvalStatus: status });
+      await fetchData();
+      toast({ title: `Attendance ${status}`, description: `Record has been ${status}.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update attendance", variant: "destructive" });
+    }
+  };
 
-          // Duration
-          let durationMinutes = differenceInMinutes(end, start);
-          // Deduct break
-          if (durationMinutes > 4 * 60) {
-             durationMinutes -= config.breakDurationMinutes;
-          }
-          if (durationMinutes < 0) durationMinutes = 0;
+  const addPosition = async (position: JobPosition) => {
+    try {
+      await apiRequest('POST', '/api/positions', position);
+      await fetchData();
+      toast({ title: "Position Added", description: `${position.title} added successfully.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to add position", variant: "destructive" });
+    }
+  };
 
-          // Overtime (after 16:00)
-          const workEnd = new Date(att.date + "T16:00:00");
-          if (end > workEnd) {
-             const otMinutes = differenceInMinutes(end, workEnd);
-             if (otMinutes > 0) {
-                totalOvertimeMinutes += otMinutes;
-                // Cap normal work minutes to 16:00
-                // (Simplified calculation)
-             }
-          }
-          
-          totalWorkMinutes += durationMinutes;
-       });
+  const deletePosition = async (id: number) => {
+    try {
+      await apiRequest('DELETE', `/api/positions/${id}`);
+      await fetchData();
+      toast({ title: "Position Deleted", description: "Position removed from master data." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to delete position", variant: "destructive" });
+    }
+  };
 
-       // Basic Salary = Total Hours * Rate (Simplified based on prompt: "total_jam_kerja x rate_per_jam")
-       // Wait, prompt says: 
-       // "Upah kerja (basic) = total_jam_kerja × rate_per_jam"
-       // "Upah lembur = ... 1.5x first hour, 2x next"
-       
-       const workHours = totalWorkMinutes / 60;
-       const basicPay = Math.floor(workHours * hourlyRate);
+  const updateConfig = async (newConfig: Partial<AppConfig>) => {
+    try {
+      await apiRequest('POST', '/api/config/bulk', newConfig);
+      setConfig(prev => ({ ...prev, ...newConfig }));
+      toast({ title: "Settings Saved", description: "Configuration updated." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to save configuration", variant: "destructive" });
+    }
+  };
 
-       // Overtime Calc
-       // Simply assume all overtime is "next hours" for simplicity in this mockup or do strict 1st hour check
-       // Let's do a simple aggregate for the mockup:
-       // If OT > 0, first hour is 1.5, rest is 2.0. 
-       // Wait, this is per day.
-       // Let's re-iterate per day for precise calc
-       
-       let totalOTPay = 0;
-       userAttendance.forEach(att => {
-          if (!att.clockOut) return;
-          const end = new Date(att.clockOut);
-          const workEnd = new Date(att.date + "T16:00:00");
-          
-          if (end > workEnd) {
-             const otMinutes = differenceInMinutes(end, workEnd);
-             const otHours = otMinutes / 60;
-             if (otHours > 0) {
-                const firstHour = Math.min(otHours, 1);
-                const nextHours = Math.max(0, otHours - 1);
-                totalOTPay += (firstHour * 1.5 * hourlyRate) + (nextHours * 2 * hourlyRate);
-             }
-          }
-       });
+  const generatePayroll = async (period: string) => {
+    try {
+      const response = await apiRequest('POST', '/api/payroll/generate', { period });
+      const result = await response.json();
+      await fetchData();
+      toast({ title: "Payroll Generated", description: `Created for ${result.payrolls?.length || 0} employees` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to generate payroll", variant: "destructive" });
+    }
+  };
 
-       // Deductions
-       const latePenalty = totalLateMinutes * config.latePenaltyPerMinute;
-       const bpjs = basicPay * (config.bpjsKesehatanRate + config.bpjsKetenagakerjaanRate);
-       const pph21 = basicPay * 0.05; // Mock 5% flat for prototype
-
-       const net = basicPay + totalOTPay - latePenalty - bpjs - pph21;
-
-       newPayrolls.push({
-         id: `pr-${u.id}-${period}`,
-         userId: u.id,
-         period,
-         basicSalary: basicPay,
-         overtimePay: totalOTPay,
-         bonus: 0,
-         deductions: {
-           late: latePenalty,
-           bpjs,
-           pph21,
-           other: 0,
-         },
-         totalNet: net,
-         status: "draft",
-         generatedAt: new Date().toISOString(),
-       });
-    });
-
-    setPayrolls(prev => {
-      // Remove old drafts for this period
-      const filtered = prev.filter(p => p.period !== period);
-      return [...filtered, ...newPayrolls];
-    });
-    
-    toast({ title: "Payroll Generated", description: `Created for ${newPayrolls.length} employees` });
+  const finalizePayroll = async (id: number) => {
+    try {
+      await apiRequest('POST', `/api/payroll/${id}/finalize`, {});
+      await fetchData();
+      toast({ title: "Payroll Finalized", description: "Status updated to Final." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to finalize payroll", variant: "destructive" });
+    }
   };
 
   return (
@@ -567,6 +492,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         leaves,
         payrolls,
         config,
+        isLoading,
         login,
         logout,
         clockIn,
@@ -579,7 +505,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePosition,
         generatePayroll,
         updateUser,
-        finalizePayroll
+        finalizePayroll,
+        createUser,
+        deleteUser,
+        refreshData,
       }}
     >
       {children}
