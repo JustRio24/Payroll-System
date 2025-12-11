@@ -17,17 +17,19 @@ export default function PayrollSlip() {
   const { payrolls, users, config, user: currentUser } = useApp();
   const slipRef = useRef<HTMLDivElement>(null);
 
-  const id = matchAdmin ? paramsAdmin?.id : paramsEmp?.id;
+  const idParam = matchAdmin ? paramsAdmin?.id : paramsEmp?.id;
+  const id = idParam ? Number(idParam) : null;
   const payroll = payrolls.find(p => p.id === id);
   const employee = users.find(u => u.id === payroll?.userId);
 
-  // Security check for employee view
-  if (matchEmp && currentUser?.role !== 'admin' && currentUser?.id !== payroll?.userId) {
-     return <div className="p-8 text-center text-red-500">Unauthorized access to this payslip.</div>;
-  }
-
+  // Check if payroll exists first
   if (!payroll || !employee) {
     return <div className="p-8 text-center text-slate-500">Payslip not found</div>;
+  }
+
+  // Security check for employee view - only after confirming payroll exists
+  if (matchEmp && currentUser?.role !== 'admin' && currentUser?.id !== payroll.userId) {
+     return <div className="p-8 text-center text-red-500">Unauthorized access to this payslip.</div>;
   }
 
   const formatIDR = (num: number) => {
@@ -52,8 +54,8 @@ export default function PayrollSlip() {
     autoTable(doc, {
       startY: 50,
       body: [
-        ['Nama', employee.name, 'Jabatan', employee.position],
-        ['NIK', employee.id, 'Status', 'Karyawan Tetap'],
+        ['Nama', employee.name, 'Jabatan', employee.position || '-'],
+        ['NIK', String(employee.id), 'Status', 'Karyawan Tetap'],
       ],
       theme: 'plain',
       styles: { fontSize: 10, cellPadding: 1 },
