@@ -89,6 +89,7 @@ export const attendance = mysqlTable("attendance", {
   isWithinGeofenceOut: boolean("is_within_geofence_out").default(false),
   lateMinutes: int("late_minutes").default(0),
   overtimeMinutes: int("overtime_minutes").default(0),
+  workingDurationMinutes: int("working_duration_minutes").default(0),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });

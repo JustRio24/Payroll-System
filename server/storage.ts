@@ -339,35 +339,78 @@ export class MemStorage implements IStorage {
       this.users.set(id, { ...u, id } as User);
     });
 
-    const today = new Date();
-    for (let i = 1; i <= 5; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      for (let userId = 2; userId <= 11; userId++) {
-        const id = this.nextAttendanceId++;
-        const isLate = Math.random() < 0.15;
-        this.attendance.set(id, {
-          id,
-          userId,
-          date: new Date(dateStr),
-          clockIn: new Date(`${dateStr}T08:00:00`),
-          clockOut: new Date(`${dateStr}T17:00:00`),
-          status: isLate ? 'late' : 'present',
-          approvalStatus: Math.random() < 0.8 ? 'approved' : 'pending',
-          isWithinGeofenceIn: true,
-          isWithinGeofenceOut: true,
-        } as Attendance);
+    // Generate attendance for Oct, Nov, Dec 2025
+    const periods = [
+      { year: 2025, month: 10, days: 31 }, // October
+      { year: 2025, month: 11, days: 30 }, // November
+      { year: 2025, month: 12, days: 31 }, // December
+    ];
+
+    for (const period of periods) {
+      for (let day = 1; day <= period.days; day++) {
+        const date = new Date(period.year, period.month - 1, day);
+        const dayOfWeek = date.getDay();
+        
+        // Skip weekends (0=Sunday, 6=Saturday)
+        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+        
+        const dateStr = date.toISOString().split('T')[0];
+        
+        for (let userId = 2; userId <= 11; userId++) {
+          // Random clock-in between 08:00 and 08:20
+          const clockInMinutes = Math.floor(Math.random() * 21); // 0-20 minutes
+          // Random clock-out between 17:00 and 17:10
+          const clockOutMinutes = Math.floor(Math.random() * 11); // 0-10 minutes
+          
+          // Calculate late minutes (threshold is 10 minutes after 08:00)
+          const lateMinutes = clockInMinutes > 10 ? clockInMinutes - 10 : 0;
+          const status = lateMinutes > 0 ? 'late' : 'present';
+          
+          // Overtime is minutes after 17:00
+          const overtimeMinutes = clockOutMinutes;
+          
+          // Working duration = (9 hours + overtime - late) - 60 min break
+          const workingDurationMinutes = (9 * 60) + clockOutMinutes - clockInMinutes - 60;
+          
+          const id = this.nextAttendanceId++;
+          this.attendance.set(id, {
+            id,
+            userId,
+            date: new Date(dateStr),
+            clockIn: new Date(`${dateStr}T08:${String(clockInMinutes).padStart(2, '0')}:00`),
+            clockOut: new Date(`${dateStr}T17:${String(clockOutMinutes).padStart(2, '0')}:00`),
+            status,
+            approvalStatus: 'approved',
+            isWithinGeofenceIn: true,
+            isWithinGeofenceOut: true,
+            lateMinutes,
+            overtimeMinutes,
+            workingDurationMinutes,
+            clockInLat: '-2.9795731113284303',
+            clockInLng: '104.73111003716011',
+            clockOutLat: '-2.9795731113284303',
+            clockOutLng: '104.73111003716011',
+          } as Attendance);
+        }
       }
     }
 
     const leavesData = [
-      { userId: 3, type: 'annual', startDate: '2024-12-01', endDate: '2024-12-03', reason: 'Liburan keluarga', status: 'approved', approvedBy: 1 },
-      { userId: 4, type: 'sick', startDate: '2024-12-04', endDate: '2024-12-05', reason: 'Demam dan flu', status: 'approved', approvedBy: 1 },
-      { userId: 5, type: 'annual', startDate: '2024-12-16', endDate: '2024-12-18', reason: 'Acara pernikahan saudara', status: 'pending' },
-      { userId: 7, type: 'other', startDate: '2024-12-08', endDate: '2024-12-08', reason: 'Mengurus dokumen penting', status: 'approved', approvedBy: 1 },
-      { userId: 8, type: 'annual', startDate: '2024-12-21', endDate: '2024-12-25', reason: 'Cuti tahunan - mudik', status: 'pending' },
+      // Oktober 2025
+      { userId: 3, type: 'annual', startDate: '2025-10-06', endDate: '2025-10-07', reason: 'Urusan keluarga di luar kota', status: 'approved', approvedBy: 1 },
+      { userId: 5, type: 'sick', startDate: '2025-10-15', endDate: '2025-10-16', reason: 'Sakit flu dan demam', status: 'approved', approvedBy: 1 },
+      { userId: 8, type: 'other', startDate: '2025-10-20', endDate: '2025-10-20', reason: 'Menghadiri wisuda saudara', status: 'approved', approvedBy: 1 },
+      // November 2025
+      { userId: 2, type: 'annual', startDate: '2025-11-03', endDate: '2025-11-05', reason: 'Cuti tahunan - liburan keluarga', status: 'approved', approvedBy: 1 },
+      { userId: 4, type: 'sick', startDate: '2025-11-12', endDate: '2025-11-13', reason: 'Sakit gigi dan perlu perawatan', status: 'approved', approvedBy: 1 },
+      { userId: 7, type: 'annual', startDate: '2025-11-24', endDate: '2025-11-26', reason: 'Cuti acara pernikahan keluarga', status: 'approved', approvedBy: 1 },
+      { userId: 9, type: 'other', startDate: '2025-11-28', endDate: '2025-11-28', reason: 'Mengurus dokumen penting', status: 'approved', approvedBy: 1 },
+      // Desember 2025
+      { userId: 3, type: 'annual', startDate: '2025-12-08', endDate: '2025-12-10', reason: 'Liburan akhir tahun', status: 'approved', approvedBy: 1 },
+      { userId: 6, type: 'annual', startDate: '2025-12-15', endDate: '2025-12-17', reason: 'Mudik akhir tahun', status: 'approved', approvedBy: 1 },
+      { userId: 10, type: 'annual', startDate: '2025-12-22', endDate: '2025-12-26', reason: 'Cuti natal dan tahun baru', status: 'approved', approvedBy: 1 },
+      { userId: 11, type: 'annual', startDate: '2025-12-29', endDate: '2025-12-31', reason: 'Cuti akhir tahun', status: 'pending' },
+      { userId: 5, type: 'other', startDate: '2025-12-24', endDate: '2025-12-24', reason: 'Menghadiri acara gereja', status: 'pending' },
     ];
 
     leavesData.forEach(l => {
@@ -380,52 +423,103 @@ export class MemStorage implements IStorage {
       } as Leave);
     });
 
-    const lastMonth = new Date();
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
-    const period = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
+    // Generate payroll for Oct, Nov, Dec 2025 based on attendance data
+    const payrollPeriods = ['2025-10', '2025-11', '2025-12'];
+    const latePenaltyPerMinute = 2000;
+    const bpjsRate = 0.03;
+    const pph21Rate = 0.05;
+    const overtimeRateFirst = 1.5;
+    const overtimeRateNext = 2.0;
 
-    for (let userId = 2; userId <= 11; userId++) {
-      const position = this.positions.get(this.users.get(userId)?.positionId || 1);
-      const hourlyRate = position?.hourlyRate || 30000;
-      const basicSalary = hourlyRate * 173;
-      const overtimePay = Math.floor(Math.random() * 500000);
-      const bonus = Math.floor(Math.random() * 300000);
-      const lateDeduction = Math.floor(Math.random() * 100000);
-      const bpjsDeduction = Math.floor(basicSalary * 0.03);
-      const pph21Deduction = Math.floor(basicSalary * 0.05);
-      const totalNet = basicSalary + overtimePay + bonus - lateDeduction - bpjsDeduction - pph21Deduction;
+    for (const periodStr of payrollPeriods) {
+      for (let userId = 2; userId <= 11; userId++) {
+        const position = this.positions.get(this.users.get(userId)?.positionId || 1);
+        const hourlyRate = position?.hourlyRate || 30000;
+        
+        // Calculate totals from attendance for this period
+        const attendanceRecords = Array.from(this.attendance.values())
+          .filter(a => {
+            const aDate = a.date instanceof Date ? a.date : new Date(a.date);
+            const recordPeriod = `${aDate.getFullYear()}-${String(aDate.getMonth() + 1).padStart(2, '0')}`;
+            return a.userId === userId && recordPeriod === periodStr && a.approvalStatus === 'approved';
+          });
+        
+        let totalWorkMinutes = 0;
+        let totalLateMinutes = 0;
+        let totalOvertimeMinutes = 0;
+        
+        for (const att of attendanceRecords) {
+          totalWorkMinutes += (att as any).workingDurationMinutes || 480;
+          totalLateMinutes += att.lateMinutes || 0;
+          totalOvertimeMinutes += att.overtimeMinutes || 0;
+        }
+        
+        const workHours = totalWorkMinutes / 60;
+        const basicSalary = Math.floor(workHours * hourlyRate);
+        
+        // Calculate overtime pay
+        let overtimePay = 0;
+        if (totalOvertimeMinutes > 0) {
+          if (totalOvertimeMinutes <= 60) {
+            overtimePay = Math.floor((totalOvertimeMinutes / 60) * hourlyRate * overtimeRateFirst);
+          } else {
+            overtimePay = Math.floor((1 * hourlyRate * overtimeRateFirst) + 
+                                    ((totalOvertimeMinutes - 60) / 60) * hourlyRate * overtimeRateNext);
+          }
+        }
+        
+        const lateDeduction = totalLateMinutes * latePenaltyPerMinute;
+        const bpjsDeduction = Math.floor(basicSalary * bpjsRate);
+        const pph21Deduction = Math.floor(basicSalary * pph21Rate);
+        const totalNet = basicSalary + overtimePay - lateDeduction - bpjsDeduction - pph21Deduction;
 
-      const id = this.nextPayrollId++;
-      this.payrolls.set(id, {
-        id,
-        userId,
-        period,
-        basicSalary,
-        overtimePay,
-        bonus,
-        lateDeduction,
-        bpjsDeduction,
-        pph21Deduction,
-        otherDeduction: 0,
-        totalNet,
-        status: 'final',
-        generatedAt: new Date(),
-      } as Payroll);
+        const id = this.nextPayrollId++;
+        this.payrolls.set(id, {
+          id,
+          userId,
+          period: periodStr,
+          basicSalary,
+          overtimePay,
+          bonus: 0,
+          lateDeduction,
+          bpjsDeduction,
+          pph21Deduction,
+          otherDeduction: 0,
+          totalNet,
+          status: 'final',
+          generatedAt: new Date(),
+          finalizedAt: new Date(),
+        } as Payroll);
+      }
     }
 
     const configData = [
+      // Company Info
       { key: 'companyName', value: 'PT Panca Karya Utama', description: 'Nama perusahaan' },
       { key: 'companyAddress', value: 'Jl. Konstruksi No. 123, Palembang, Sumatera Selatan', description: 'Alamat perusahaan' },
+      { key: 'companyPhone', value: '+62 711 123456', description: 'Telepon perusahaan' },
+      { key: 'companyEmail', value: 'info@pancakaryautama.co.id', description: 'Email perusahaan' },
+      { key: 'companyWebsite', value: 'www.pancakaryautama.co.id', description: 'Website perusahaan' },
+      { key: 'vision', value: 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia yang mengutamakan kualitas, inovasi, dan kepuasan pelanggan.', description: 'Visi perusahaan' },
+      { key: 'mission', value: 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja, ketepatan waktu, dan efisiensi biaya.', description: 'Misi perusahaan' },
+      { key: 'history', value: 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang. Berawal dari sebuah kontraktor kecil, perusahaan telah berkembang menjadi salah satu kontraktor terkemuka di Sumatera Selatan dengan berbagai proyek besar di bidang konstruksi sipil, gedung, dan infrastruktur.', description: 'Sejarah perusahaan' },
+      // Geofence Settings
       { key: 'officeLat', value: '-2.9795731113284303', description: 'Latitude kantor untuk geofence' },
       { key: 'officeLng', value: '104.73111003716011', description: 'Longitude kantor untuk geofence' },
       { key: 'geofenceRadius', value: '100', description: 'Radius geofence dalam meter' },
-      { key: 'latePenaltyPerMinute', value: '2000', description: 'Potongan keterlambatan per menit' },
-      { key: 'breakDurationMinutes', value: '60', description: 'Durasi istirahat dalam menit' },
-      { key: 'bpjsKesehatanRate', value: '0.01', description: 'Rate BPJS Kesehatan' },
-      { key: 'bpjsKetenagakerjaanRate', value: '0.02', description: 'Rate BPJS Ketenagakerjaan' },
-      { key: 'vision', value: 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia.', description: 'Visi perusahaan' },
-      { key: 'mission', value: 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja.', description: 'Misi perusahaan' },
-      { key: 'history', value: 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang.', description: 'Sejarah perusahaan' },
+      // Work Schedule Settings
+      { key: 'work_start_time', value: '08:00', description: 'Jam mulai kerja (HH:MM)' },
+      { key: 'work_end_time', value: '17:00', description: 'Jam selesai kerja (HH:MM)' },
+      { key: 'late_tolerance_minutes', value: '10', description: 'Toleransi keterlambatan dalam menit' },
+      { key: 'break_duration_minutes', value: '60', description: 'Durasi istirahat dalam menit' },
+      // Overtime Rates
+      { key: 'overtime_rate_first_hour', value: '1.5', description: 'Multiplier lembur jam pertama' },
+      { key: 'overtime_rate_next_hours', value: '2.0', description: 'Multiplier lembur jam berikutnya' },
+      // Deduction Rates
+      { key: 'late_penalty_per_minute', value: '2000', description: 'Potongan keterlambatan per menit (Rupiah)' },
+      { key: 'bpjs_kesehatan_rate', value: '0.01', description: 'Rate BPJS Kesehatan (1%)' },
+      { key: 'bpjs_ketenagakerjaan_rate', value: '0.02', description: 'Rate BPJS Ketenagakerjaan JHT (2%)' },
+      { key: 'pph21_rate', value: '0.05', description: 'Rate PPh 21 (5%)' },
     ];
 
     configData.forEach(c => {

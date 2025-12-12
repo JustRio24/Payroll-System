@@ -2,6 +2,7 @@
 -- SQL Script untuk Database db_payroll
 -- Database: MySQL (untuk XAMPP/phpMyAdmin)
 -- PT Panca Karya Utama - Payroll & HRIS System
+-- Data Periode: Oktober, November, Desember 2025
 -- ============================================
 
 -- Buat database (jika belum ada)
@@ -77,6 +78,12 @@ CREATE TABLE attendance (
   approval_status VARCHAR(20) NOT NULL DEFAULT 'pending',
   is_within_geofence_in BOOLEAN DEFAULT FALSE,
   is_within_geofence_out BOOLEAN DEFAULT FALSE,
+<<<<<<< HEAD
+=======
+  late_minutes INT DEFAULT 0,
+  overtime_minutes INT DEFAULT 0,
+  working_duration_minutes INT DEFAULT 0,
+>>>>>>> ba42d7880d64a2004bc73f2297cb16e982567c08
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user_id (user_id),
@@ -169,7 +176,6 @@ INSERT INTO positions (title, hourly_rate, description) VALUES
 INSERT INTO users (name, email, password, role, position_id, join_date, phone, address, status) VALUES
 -- Admin
 ('Administrator', 'admin@panca.test', 'password', 'admin', 8, '2020-01-01', '081234567890', 'Jl. Admin No. 1, Palembang', 'active'),
-
 -- Employees
 ('Budi Santoso', 'budi@panca.test', 'password', 'employee', 1, '2021-03-15', '081234567891', 'Jl. Merdeka No. 10, Palembang', 'active'),
 ('Siti Aminah', 'siti@panca.test', 'password', 'employee', 3, '2022-06-10', '081234567892', 'Jl. Pahlawan No. 25, Palembang', 'active'),
@@ -183,116 +189,12 @@ INSERT INTO users (name, email, password, role, position_id, join_date, phone, a
 ('Bambang Susilo', 'bambang@panca.test', 'password', 'employee', 6, '2023-03-01', '081234567800', 'Jl. Kolonel Atmo No. 99, Palembang', 'active');
 
 -- ============================================
--- DATA DUMMY: Attendance (Absensi) - 30 hari terakhir
--- ============================================
--- Generate attendance for each employee for the last 30 days (excluding weekends)
-INSERT INTO attendance (user_id, date, clock_in, clock_out, status, approval_status, is_within_geofence_in, is_within_geofence_out) VALUES
--- Budi Santoso (user_id = 2)
-(2, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(2, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(2, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(2, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Siti Aminah (user_id = 3)
-(3, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR + INTERVAL 15 MINUTE, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'late', 'approved', TRUE, TRUE),
-(3, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 1 HOUR, 'present', 'approved', TRUE, TRUE),
-(3, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(3, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Rudi Hartono (user_id = 4)
-(4, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(4, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 2 HOUR, 'present', 'approved', TRUE, TRUE),
-(4, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR + INTERVAL 30 MINUTE, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'late', 'approved', TRUE, TRUE),
-(4, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'pending', TRUE, TRUE),
-(4, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Dewi Lestari (user_id = 5)
-(5, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(5, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(5, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'pending', TRUE, TRUE),
-(5, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Joko Anwar (user_id = 6)
-(6, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(6, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', FALSE, TRUE),
-(6, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(6, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(6, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Andi Wijaya (user_id = 7)
-(7, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 1 HOUR, 'present', 'approved', TRUE, TRUE),
-(7, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(7, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(7, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'pending', TRUE, TRUE),
-(7, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Rina Kusuma (user_id = 8)
-(8, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(8, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(8, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(8, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(8, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Hendra Pratama (user_id = 9)
-(9, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(9, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR + INTERVAL 20 MINUTE, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'late', 'approved', TRUE, TRUE),
-(9, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(9, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(9, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Maya Sari (user_id = 10)
-(10, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(10, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(10, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(10, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(10, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-
--- Bambang Susilo (user_id = 11)
-(11, DATE_SUB(CURDATE(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 1 DAY) + INTERVAL 0 HOUR, 'present', 'pending', TRUE, TRUE),
-(11, DATE_SUB(CURDATE(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 2 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(11, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 3 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(11, DATE_SUB(CURDATE(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 4 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE),
-(11, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY) - INTERVAL 9 HOUR, DATE_SUB(NOW(), INTERVAL 5 DAY) + INTERVAL 0 HOUR, 'present', 'approved', TRUE, TRUE);
-
--- ============================================
--- DATA DUMMY: Leaves (Pengajuan Cuti)
--- ============================================
-INSERT INTO leaves (user_id, type, start_date, end_date, reason, status, approved_by, approved_at) VALUES
-(3, 'annual', DATE_SUB(CURDATE(), INTERVAL 10 DAY), DATE_SUB(CURDATE(), INTERVAL 8 DAY), 'Liburan keluarga', 'approved', 1, DATE_SUB(NOW(), INTERVAL 12 DAY)),
-(4, 'sick', DATE_SUB(CURDATE(), INTERVAL 7 DAY), DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'Demam dan flu', 'approved', 1, DATE_SUB(NOW(), INTERVAL 7 DAY)),
-(5, 'annual', DATE_ADD(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'Acara pernikahan saudara', 'pending', NULL, NULL),
-(7, 'other', DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'Mengurus dokumen penting', 'approved', 1, DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(8, 'annual', DATE_ADD(CURDATE(), INTERVAL 10 DAY), DATE_ADD(CURDATE(), INTERVAL 14 DAY), 'Cuti tahunan - mudik', 'pending', NULL, NULL),
-(9, 'sick', DATE_SUB(CURDATE(), INTERVAL 15 DAY), DATE_SUB(CURDATE(), INTERVAL 14 DAY), 'Sakit gigi', 'approved', 1, DATE_SUB(NOW(), INTERVAL 15 DAY)),
-(10, 'other', DATE_ADD(CURDATE(), INTERVAL 2 DAY), DATE_ADD(CURDATE(), INTERVAL 2 DAY), 'Wisuda anak', 'pending', NULL, NULL),
-(2, 'annual', DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 28 DAY), 'Cuti tahunan', 'approved', 1, DATE_SUB(NOW(), INTERVAL 35 DAY));
-
--- ============================================
--- DATA DUMMY: Payroll (Penggajian) - Bulan lalu
--- ============================================
-SET @last_month = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m');
-
-INSERT INTO payroll (user_id, period, basic_salary, overtime_pay, bonus, late_deduction, bpjs_deduction, pph21_deduction, other_deduction, total_net, status, finalized_at) VALUES
-(2, @last_month, 12975000, 562500, 0, 0, 389250, 648750, 0, 12499500, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(3, @last_month, 10380000, 225000, 0, 30000, 311400, 519000, 0, 9744600, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(4, @last_month, 6055000, 105000, 0, 60000, 181650, 302750, 0, 5615600, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(5, @last_month, 5190000, 0, 0, 0, 155700, 259500, 0, 4774800, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(6, @last_month, 2076000, 36000, 0, 0, 62280, 103800, 0, 1945920, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(7, @last_month, 10380000, 300000, 500000, 0, 311400, 519000, 0, 10349600, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(8, @last_month, 8650000, 187500, 0, 0, 259500, 432500, 0, 8145500, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(9, @last_month, 7785000, 168750, 0, 40000, 233550, 389250, 0, 7290950, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(10, @last_month, 8650000, 250000, 0, 0, 259500, 432500, 0, 8208000, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY)),
-(11, @last_month, 6055000, 0, 0, 0, 181650, 302750, 0, 5570600, 'final', DATE_SUB(NOW(), INTERVAL 5 DAY));
-
--- ============================================
 -- DATA DUMMY: Config (Konfigurasi Sistem)
 -- ============================================
 INSERT INTO config (`key`, value, description) VALUES
 ('companyName', 'PT Panca Karya Utama', 'Nama perusahaan'),
 ('companyAddress', 'Jl. Konstruksi No. 123, Palembang, Sumatera Selatan', 'Alamat perusahaan'),
+<<<<<<< HEAD
 ('officeLat', '-2.9795731113284303', 'Latitude kantor untuk geofence'),
 ('officeLng', '104.73111003716011', 'Longitude kantor untuk geofence'),
 ('geofenceRadius', '100', 'Radius geofence dalam meter'),
@@ -303,6 +205,355 @@ INSERT INTO config (`key`, value, description) VALUES
 ('vision', 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia yang mengutamakan kualitas, inovasi, dan kepuasan pelanggan.', 'Visi perusahaan'),
 ('mission', 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja, ketepatan waktu, dan efisiensi biaya.', 'Misi perusahaan'),
 ('history', 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang. Berawal dari sebuah kontraktor kecil, perusahaan telah berkembang menjadi salah satu kontraktor terkemuka di Sumatera Selatan dengan berbagai proyek besar di bidang konstruksi sipil, gedung, dan infrastruktur.', 'Sejarah perusahaan');
+=======
+('companyPhone', '+62 711 123456', 'Telepon perusahaan'),
+('companyEmail', 'info@pancakaryautama.co.id', 'Email perusahaan'),
+('companyWebsite', 'www.pancakaryautama.co.id', 'Website perusahaan'),
+('vision', 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia yang mengutamakan kualitas, inovasi, dan kepuasan pelanggan.', 'Visi perusahaan'),
+('mission', 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja, ketepatan waktu, dan efisiensi biaya.', 'Misi perusahaan'),
+('history', 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang. Berawal dari sebuah kontraktor kecil, perusahaan telah berkembang menjadi salah satu kontraktor terkemuka di Sumatera Selatan dengan berbagai proyek besar di bidang konstruksi sipil, gedung, dan infrastruktur.', 'Sejarah perusahaan'),
+-- Geofence Settings
+('officeLat', '-2.9795731113284303', 'Latitude kantor untuk geofence'),
+('officeLng', '104.73111003716011', 'Longitude kantor untuk geofence'),
+('geofenceRadius', '100', 'Radius geofence dalam meter'),
+-- Work Schedule Settings
+('work_start_time', '08:00', 'Jam mulai kerja (HH:MM)'),
+('work_end_time', '17:00', 'Jam selesai kerja (HH:MM)'),
+('late_tolerance_minutes', '10', 'Toleransi keterlambatan dalam menit'),
+('break_duration_minutes', '60', 'Durasi istirahat dalam menit'),
+-- Overtime Rates
+('overtime_rate_first_hour', '1.5', 'Multiplier lembur jam pertama'),
+('overtime_rate_next_hours', '2.0', 'Multiplier lembur jam berikutnya'),
+-- Deduction Rates
+('late_penalty_per_minute', '2000', 'Potongan keterlambatan per menit (Rupiah)'),
+('bpjs_kesehatan_rate', '0.01', 'Rate BPJS Kesehatan (1%)'),
+('bpjs_ketenagakerjaan_rate', '0.02', 'Rate BPJS Ketenagakerjaan JHT (2%)'),
+('pph21_rate', '0.05', 'Rate PPh 21 (5%)');
+>>>>>>> ba42d7880d64a2004bc73f2297cb16e982567c08
+
+-- ============================================
+-- PROSEDUR: Generate Attendance Data
+-- Membuat data absensi untuk 3 periode (Okt, Nov, Des 2025)
+-- Clock-in: 08:00-08:20 (random)
+-- Clock-out: 17:00-17:10 (random)
+-- Late threshold: 08:10 (toleransi 10 menit)
+-- ============================================
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS generate_attendance_data//
+
+CREATE PROCEDURE generate_attendance_data()
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_date DATE;
+    DECLARE v_clock_in_minutes INT;
+    DECLARE v_clock_out_minutes INT;
+    DECLARE v_late_minutes INT;
+    DECLARE v_overtime_minutes INT;
+    DECLARE v_working_duration INT;
+    DECLARE v_status VARCHAR(20);
+    DECLARE v_day_of_week INT;
+    DECLARE done INT DEFAULT FALSE;
+    
+    DECLARE user_cursor CURSOR FOR SELECT id FROM users WHERE role = 'employee';
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    -- Generate for October 2025 (1-31)
+    SET v_date = '2025-10-01';
+    WHILE v_date <= '2025-10-31' DO
+        SET v_day_of_week = DAYOFWEEK(v_date);
+        -- Skip weekends (1=Sunday, 7=Saturday)
+        IF v_day_of_week NOT IN (1, 7) THEN
+            OPEN user_cursor;
+            read_loop: LOOP
+                FETCH user_cursor INTO v_user_id;
+                IF done THEN
+                    LEAVE read_loop;
+                END IF;
+                
+                -- Random clock-in: 0-20 minutes after 08:00
+                SET v_clock_in_minutes = FLOOR(RAND() * 21);
+                -- Random clock-out: 0-10 minutes after 17:00
+                SET v_clock_out_minutes = FLOOR(RAND() * 11);
+                
+                -- Calculate late minutes (threshold is 10 minutes)
+                IF v_clock_in_minutes > 10 THEN
+                    SET v_late_minutes = v_clock_in_minutes - 10;
+                    SET v_status = 'late';
+                ELSE
+                    SET v_late_minutes = 0;
+                    SET v_status = 'present';
+                END IF;
+                
+                -- Calculate overtime (after 17:00)
+                SET v_overtime_minutes = v_clock_out_minutes;
+                
+                -- Calculate working duration in minutes
+                -- From (08:00 + clock_in_minutes) to (17:00 + clock_out_minutes) minus 60 min break
+                SET v_working_duration = (9 * 60) + v_clock_out_minutes - v_clock_in_minutes - 60;
+                
+                INSERT INTO attendance (
+                    user_id, date, clock_in, clock_out, status, approval_status,
+                    is_within_geofence_in, is_within_geofence_out, 
+                    late_minutes, overtime_minutes, working_duration_minutes,
+                    clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng
+                ) VALUES (
+                    v_user_id,
+                    v_date,
+                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    v_status,
+                    'approved',
+                    TRUE, TRUE,
+                    v_late_minutes, v_overtime_minutes, v_working_duration,
+                    -2.9795731113284303, 104.73111003716011,
+                    -2.9795731113284303, 104.73111003716011
+                );
+            END LOOP;
+            CLOSE user_cursor;
+            SET done = FALSE;
+        END IF;
+        SET v_date = DATE_ADD(v_date, INTERVAL 1 DAY);
+    END WHILE;
+    
+    -- Generate for November 2025 (1-30)
+    SET v_date = '2025-11-01';
+    WHILE v_date <= '2025-11-30' DO
+        SET v_day_of_week = DAYOFWEEK(v_date);
+        IF v_day_of_week NOT IN (1, 7) THEN
+            OPEN user_cursor;
+            read_loop2: LOOP
+                FETCH user_cursor INTO v_user_id;
+                IF done THEN
+                    LEAVE read_loop2;
+                END IF;
+                
+                SET v_clock_in_minutes = FLOOR(RAND() * 21);
+                SET v_clock_out_minutes = FLOOR(RAND() * 11);
+                
+                IF v_clock_in_minutes > 10 THEN
+                    SET v_late_minutes = v_clock_in_minutes - 10;
+                    SET v_status = 'late';
+                ELSE
+                    SET v_late_minutes = 0;
+                    SET v_status = 'present';
+                END IF;
+                
+                SET v_overtime_minutes = v_clock_out_minutes;
+                SET v_working_duration = (9 * 60) + v_clock_out_minutes - v_clock_in_minutes - 60;
+                
+                INSERT INTO attendance (
+                    user_id, date, clock_in, clock_out, status, approval_status,
+                    is_within_geofence_in, is_within_geofence_out, 
+                    late_minutes, overtime_minutes, working_duration_minutes,
+                    clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng
+                ) VALUES (
+                    v_user_id,
+                    v_date,
+                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    v_status,
+                    'approved',
+                    TRUE, TRUE,
+                    v_late_minutes, v_overtime_minutes, v_working_duration,
+                    -2.9795731113284303, 104.73111003716011,
+                    -2.9795731113284303, 104.73111003716011
+                );
+            END LOOP;
+            CLOSE user_cursor;
+            SET done = FALSE;
+        END IF;
+        SET v_date = DATE_ADD(v_date, INTERVAL 1 DAY);
+    END WHILE;
+    
+    -- Generate for December 2025 (1-31)
+    SET v_date = '2025-12-01';
+    WHILE v_date <= '2025-12-31' DO
+        SET v_day_of_week = DAYOFWEEK(v_date);
+        IF v_day_of_week NOT IN (1, 7) THEN
+            OPEN user_cursor;
+            read_loop3: LOOP
+                FETCH user_cursor INTO v_user_id;
+                IF done THEN
+                    LEAVE read_loop3;
+                END IF;
+                
+                SET v_clock_in_minutes = FLOOR(RAND() * 21);
+                SET v_clock_out_minutes = FLOOR(RAND() * 11);
+                
+                IF v_clock_in_minutes > 10 THEN
+                    SET v_late_minutes = v_clock_in_minutes - 10;
+                    SET v_status = 'late';
+                ELSE
+                    SET v_late_minutes = 0;
+                    SET v_status = 'present';
+                END IF;
+                
+                SET v_overtime_minutes = v_clock_out_minutes;
+                SET v_working_duration = (9 * 60) + v_clock_out_minutes - v_clock_in_minutes - 60;
+                
+                INSERT INTO attendance (
+                    user_id, date, clock_in, clock_out, status, approval_status,
+                    is_within_geofence_in, is_within_geofence_out, 
+                    late_minutes, overtime_minutes, working_duration_minutes,
+                    clock_in_lat, clock_in_lng, clock_out_lat, clock_out_lng
+                ) VALUES (
+                    v_user_id,
+                    v_date,
+                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    v_status,
+                    'approved',
+                    TRUE, TRUE,
+                    v_late_minutes, v_overtime_minutes, v_working_duration,
+                    -2.9795731113284303, 104.73111003716011,
+                    -2.9795731113284303, 104.73111003716011
+                );
+            END LOOP;
+            CLOSE user_cursor;
+            SET done = FALSE;
+        END IF;
+        SET v_date = DATE_ADD(v_date, INTERVAL 1 DAY);
+    END WHILE;
+END//
+
+DELIMITER ;
+
+-- Execute the procedure
+CALL generate_attendance_data();
+
+-- Clean up
+DROP PROCEDURE IF EXISTS generate_attendance_data;
+
+-- ============================================
+-- DATA DUMMY: Leaves (Pengajuan Cuti) - Periode Okt-Des 2025
+-- ============================================
+INSERT INTO leaves (user_id, type, start_date, end_date, reason, status, approved_by, approved_at) VALUES
+-- Oktober 2025
+(3, 'annual', '2025-10-06', '2025-10-07', 'Urusan keluarga di luar kota', 'approved', 1, '2025-10-04 09:00:00'),
+(5, 'sick', '2025-10-15', '2025-10-16', 'Sakit flu dan demam', 'approved', 1, '2025-10-15 08:30:00'),
+(8, 'other', '2025-10-20', '2025-10-20', 'Menghadiri wisuda saudara', 'approved', 1, '2025-10-18 10:00:00'),
+-- November 2025
+(2, 'annual', '2025-11-03', '2025-11-05', 'Cuti tahunan - liburan keluarga', 'approved', 1, '2025-11-01 14:00:00'),
+(4, 'sick', '2025-11-12', '2025-11-13', 'Sakit gigi dan perlu perawatan', 'approved', 1, '2025-11-12 07:30:00'),
+(7, 'annual', '2025-11-24', '2025-11-26', 'Cuti acara pernikahan keluarga', 'approved', 1, '2025-11-20 11:00:00'),
+(9, 'other', '2025-11-28', '2025-11-28', 'Mengurus dokumen penting', 'approved', 1, '2025-11-26 09:00:00'),
+-- Desember 2025
+(3, 'annual', '2025-12-08', '2025-12-10', 'Liburan akhir tahun', 'approved', 1, '2025-12-05 10:00:00'),
+(6, 'annual', '2025-12-15', '2025-12-17', 'Mudik akhir tahun', 'approved', 1, '2025-12-12 09:00:00'),
+(10, 'annual', '2025-12-22', '2025-12-26', 'Cuti natal dan tahun baru', 'approved', 1, '2025-12-18 14:00:00'),
+(11, 'annual', '2025-12-29', '2025-12-31', 'Cuti akhir tahun', 'pending', NULL, NULL),
+(5, 'other', '2025-12-24', '2025-12-24', 'Menghadiri acara gereja', 'pending', NULL, NULL);
+
+-- ============================================
+-- PROSEDUR: Generate Payroll Data berdasarkan Attendance
+-- Formula:
+-- basic_salary = hourly_rate * total_working_hours
+-- overtime_pay = overtime_hours * hourly_rate * multiplier
+-- late_deduction = total_late_minutes * late_penalty_per_minute
+-- bpjs_deduction = basic_salary * (bpjs_kesehatan_rate + bpjs_ketenagakerjaan_rate)
+-- pph21_deduction = basic_salary * pph21_rate
+-- ============================================
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS generate_payroll_data//
+
+CREATE PROCEDURE generate_payroll_data()
+BEGIN
+    DECLARE v_user_id INT;
+    DECLARE v_position_id INT;
+    DECLARE v_hourly_rate INT;
+    DECLARE v_period VARCHAR(7);
+    DECLARE v_total_work_minutes INT;
+    DECLARE v_total_late_minutes INT;
+    DECLARE v_total_overtime_minutes INT;
+    DECLARE v_basic_salary INT;
+    DECLARE v_overtime_pay INT;
+    DECLARE v_late_deduction INT;
+    DECLARE v_bpjs_deduction INT;
+    DECLARE v_pph21_deduction INT;
+    DECLARE v_total_net INT;
+    DECLARE v_late_penalty INT DEFAULT 2000;
+    DECLARE v_bpjs_rate DECIMAL(4,2) DEFAULT 0.03;
+    DECLARE v_pph21_rate DECIMAL(4,2) DEFAULT 0.05;
+    DECLARE v_ot_rate_first DECIMAL(3,1) DEFAULT 1.5;
+    DECLARE v_ot_rate_next DECIMAL(3,1) DEFAULT 2.0;
+    DECLARE done INT DEFAULT FALSE;
+    
+    DECLARE user_cursor CURSOR FOR 
+        SELECT u.id, u.position_id, COALESCE(p.hourly_rate, 30000) 
+        FROM users u 
+        LEFT JOIN positions p ON u.position_id = p.id 
+        WHERE u.role = 'employee';
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    -- Generate payroll for each period
+    SET v_period = '2025-10';
+    WHILE v_period <= '2025-12' DO
+        OPEN user_cursor;
+        payroll_loop: LOOP
+            FETCH user_cursor INTO v_user_id, v_position_id, v_hourly_rate;
+            IF done THEN
+                LEAVE payroll_loop;
+            END IF;
+            
+            -- Calculate totals from attendance
+            SELECT 
+                COALESCE(SUM(working_duration_minutes), 0),
+                COALESCE(SUM(late_minutes), 0),
+                COALESCE(SUM(overtime_minutes), 0)
+            INTO v_total_work_minutes, v_total_late_minutes, v_total_overtime_minutes
+            FROM attendance 
+            WHERE user_id = v_user_id 
+            AND DATE_FORMAT(date, '%Y-%m') = v_period
+            AND approval_status = 'approved';
+            
+            -- Calculate salaries
+            SET v_basic_salary = FLOOR((v_total_work_minutes / 60) * v_hourly_rate);
+            
+            -- Overtime calculation: first 60 min at 1.5x, rest at 2.0x
+            IF v_total_overtime_minutes <= 60 THEN
+                SET v_overtime_pay = FLOOR((v_total_overtime_minutes / 60) * v_hourly_rate * v_ot_rate_first);
+            ELSE
+                SET v_overtime_pay = FLOOR((1 * v_hourly_rate * v_ot_rate_first) + 
+                                          ((v_total_overtime_minutes - 60) / 60) * v_hourly_rate * v_ot_rate_next);
+            END IF;
+            
+            SET v_late_deduction = v_total_late_minutes * v_late_penalty;
+            SET v_bpjs_deduction = FLOOR(v_basic_salary * v_bpjs_rate);
+            SET v_pph21_deduction = FLOOR(v_basic_salary * v_pph21_rate);
+            SET v_total_net = v_basic_salary + v_overtime_pay - v_late_deduction - v_bpjs_deduction - v_pph21_deduction;
+            
+            INSERT INTO payroll (
+                user_id, period, basic_salary, overtime_pay, bonus,
+                late_deduction, bpjs_deduction, pph21_deduction, other_deduction,
+                total_net, status, finalized_at
+            ) VALUES (
+                v_user_id, v_period, v_basic_salary, v_overtime_pay, 0,
+                v_late_deduction, v_bpjs_deduction, v_pph21_deduction, 0,
+                v_total_net, 'final', NOW()
+            );
+        END LOOP;
+        CLOSE user_cursor;
+        SET done = FALSE;
+        
+        -- Move to next period
+        IF v_period = '2025-10' THEN SET v_period = '2025-11';
+        ELSEIF v_period = '2025-11' THEN SET v_period = '2025-12';
+        ELSE SET v_period = '2026-01';
+        END IF;
+    END WHILE;
+END//
+
+DELIMITER ;
+
+-- Execute the procedure
+CALL generate_payroll_data();
+
+-- Clean up
+DROP PROCEDURE IF EXISTS generate_payroll_data;
 
 -- ============================================
 -- Verifikasi data
@@ -315,12 +566,14 @@ SELECT COUNT(*) AS total_users FROM users;
 
 SELECT 'Tabel attendance:' AS 'Info';
 SELECT COUNT(*) AS total_attendance FROM attendance;
+SELECT DATE_FORMAT(date, '%Y-%m') AS period, COUNT(*) AS records FROM attendance GROUP BY DATE_FORMAT(date, '%Y-%m');
 
 SELECT 'Tabel leaves:' AS 'Info';
 SELECT COUNT(*) AS total_leaves FROM leaves;
 
 SELECT 'Tabel payroll:' AS 'Info';
 SELECT COUNT(*) AS total_payroll FROM payroll;
+SELECT period, COUNT(*) AS records, SUM(total_net) AS total_gaji FROM payroll GROUP BY period;
 
 SELECT 'Tabel config:' AS 'Info';
 SELECT COUNT(*) AS total_config FROM config;

@@ -21,6 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import generatedLogo from "@assets/generated_images/minimalist_geometric_construction_logo.png";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useApp();
@@ -55,7 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col h-full bg-slate-900 text-slate-100">
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold">P</div>
+          <img src={generatedLogo} alt="Panca Karya" className="w-8 h-8 rounded object-contain bg-white p-0.5" />
           <h1 className="font-display font-bold text-lg tracking-tight">Panca Karya</h1>
         </div>
         <p className="text-xs text-slate-400 mt-1 pl-11">Construction HRIS</p>
@@ -118,7 +119,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Mobile Sidebar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 z-50 flex items-center px-4 justify-between">
         <div className="flex items-center gap-2 text-white">
-           <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white font-bold">P</div>
+           <img src={generatedLogo} alt="Panca Karya" className="w-8 h-8 rounded object-contain bg-white p-0.5" />
            <span className="font-bold">Panca Karya</span>
         </div>
         <Sheet>
