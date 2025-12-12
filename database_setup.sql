@@ -304,8 +304,8 @@ BEGIN
                 ) VALUES (
                     v_user_id,
                     v_date,
-                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
-                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 01:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 10:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
                     v_status,
                     'approved',
                     TRUE, TRUE,
@@ -354,8 +354,8 @@ BEGIN
                 ) VALUES (
                     v_user_id,
                     v_date,
-                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
-                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 01:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 10:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
                     v_status,
                     'approved',
                     TRUE, TRUE,
@@ -404,8 +404,8 @@ BEGIN
                 ) VALUES (
                     v_user_id,
                     v_date,
-                    TIMESTAMP(CONCAT(v_date, ' 08:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
-                    TIMESTAMP(CONCAT(v_date, ' 17:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 01:', LPAD(v_clock_in_minutes, 2, '0'), ':00')),
+                    TIMESTAMP(CONCAT(v_date, ' 10:', LPAD(v_clock_out_minutes, 2, '0'), ':00')),
                     v_status,
                     'approved',
                     TRUE, TRUE,
