@@ -16,6 +16,7 @@ USE db_payroll;
 -- ============================================
 -- DROP TABLES (untuk reset jika perlu)
 -- ============================================
+DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS payroll;
 DROP TABLE IF EXISTS leaves;
 DROP TABLE IF EXISTS attendance;
@@ -78,12 +79,9 @@ CREATE TABLE attendance (
   approval_status VARCHAR(20) NOT NULL DEFAULT 'pending',
   is_within_geofence_in BOOLEAN DEFAULT FALSE,
   is_within_geofence_out BOOLEAN DEFAULT FALSE,
-<<<<<<< HEAD
-=======
   late_minutes INT DEFAULT 0,
   overtime_minutes INT DEFAULT 0,
   working_duration_minutes INT DEFAULT 0,
->>>>>>> ba42d7880d64a2004bc73f2297cb16e982567c08
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_user_id (user_id),
@@ -156,6 +154,23 @@ CREATE TABLE config (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
+-- Tabel: activity_logs
+-- Deskripsi: Log aktivitas pengguna untuk tracking realtime
+-- ============================================
+CREATE TABLE activity_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  activity_type VARCHAR(50) NOT NULL,
+  description TEXT,
+  metadata TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id),
+  INDEX idx_activity_type (activity_type),
+  INDEX idx_created_at (created_at),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
 -- DATA DUMMY: Positions (Jabatan)
 -- ============================================
 INSERT INTO positions (title, hourly_rate, description) VALUES
@@ -192,20 +207,9 @@ INSERT INTO users (name, email, password, role, position_id, join_date, phone, a
 -- DATA DUMMY: Config (Konfigurasi Sistem)
 -- ============================================
 INSERT INTO config (`key`, value, description) VALUES
+-- Company Info
 ('companyName', 'PT Panca Karya Utama', 'Nama perusahaan'),
 ('companyAddress', 'Jl. Konstruksi No. 123, Palembang, Sumatera Selatan', 'Alamat perusahaan'),
-<<<<<<< HEAD
-('officeLat', '-2.9795731113284303', 'Latitude kantor untuk geofence'),
-('officeLng', '104.73111003716011', 'Longitude kantor untuk geofence'),
-('geofenceRadius', '100', 'Radius geofence dalam meter'),
-('latePenaltyPerMinute', '2000', 'Potongan keterlambatan per menit (Rupiah)'),
-('breakDurationMinutes', '60', 'Durasi istirahat dalam menit'),
-('bpjsKesehatanRate', '0.01', 'Rate BPJS Kesehatan (1%)'),
-('bpjsKetenagakerjaanRate', '0.02', 'Rate BPJS Ketenagakerjaan JHT (2%)'),
-('vision', 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia yang mengutamakan kualitas, inovasi, dan kepuasan pelanggan.', 'Visi perusahaan'),
-('mission', 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja, ketepatan waktu, dan efisiensi biaya.', 'Misi perusahaan'),
-('history', 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang. Berawal dari sebuah kontraktor kecil, perusahaan telah berkembang menjadi salah satu kontraktor terkemuka di Sumatera Selatan dengan berbagai proyek besar di bidang konstruksi sipil, gedung, dan infrastruktur.', 'Sejarah perusahaan');
-=======
 ('companyPhone', '+62 711 123456', 'Telepon perusahaan'),
 ('companyEmail', 'info@pancakaryautama.co.id', 'Email perusahaan'),
 ('companyWebsite', 'www.pancakaryautama.co.id', 'Website perusahaan'),
@@ -229,7 +233,6 @@ INSERT INTO config (`key`, value, description) VALUES
 ('bpjs_kesehatan_rate', '0.01', 'Rate BPJS Kesehatan (1%)'),
 ('bpjs_ketenagakerjaan_rate', '0.02', 'Rate BPJS Ketenagakerjaan JHT (2%)'),
 ('pph21_rate', '0.05', 'Rate PPh 21 (5%)');
->>>>>>> ba42d7880d64a2004bc73f2297cb16e982567c08
 
 -- ============================================
 -- PROSEDUR: Generate Attendance Data
