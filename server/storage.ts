@@ -320,18 +320,18 @@ export class MemStorage implements IStorage {
       this.positions.set(id, { ...p, id } as Position);
     });
 
-    const usersData: Omit<User, 'id'>[] = [
-      { name: 'Administrator', email: 'admin@panca.test', password: 'password', role: 'admin', positionId: 8, joinDate: '2020-01-01', phone: '081234567890', address: 'Jl. Admin No. 1, Palembang', status: 'active' },
-      { name: 'Budi Santoso', email: 'budi@panca.test', password: 'password', role: 'employee', positionId: 1, joinDate: '2021-03-15', phone: '081234567891', address: 'Jl. Merdeka No. 10, Palembang', status: 'active' },
-      { name: 'Siti Aminah', email: 'siti@panca.test', password: 'password', role: 'employee', positionId: 3, joinDate: '2022-06-10', phone: '081234567892', address: 'Jl. Pahlawan No. 25, Palembang', status: 'active' },
-      { name: 'Rudi Hartono', email: 'rudi@panca.test', password: 'password', role: 'employee', positionId: 6, joinDate: '2023-01-20', phone: '081234567893', address: 'Jl. Sudirman No. 50, Palembang', status: 'active' },
-      { name: 'Dewi Lestari', email: 'dewi@panca.test', password: 'password', role: 'employee', positionId: 9, joinDate: '2023-05-05', phone: '081234567894', address: 'Jl. Gatot Subroto No. 15, Palembang', status: 'active' },
-      { name: 'Joko Anwar', email: 'joko@panca.test', password: 'password', role: 'employee', positionId: 10, joinDate: '2023-11-01', phone: '081234567895', address: 'Jl. Ahmad Yani No. 30, Palembang', status: 'active' },
-      { name: 'Andi Wijaya', email: 'andi@panca.test', password: 'password', role: 'employee', positionId: 2, joinDate: '2020-06-15', phone: '081234567896', address: 'Jl. Diponegoro No. 42, Palembang', status: 'active' },
-      { name: 'Rina Kusuma', email: 'rina@panca.test', password: 'password', role: 'employee', positionId: 4, joinDate: '2021-09-01', phone: '081234567897', address: 'Jl. Kartini No. 18, Palembang', status: 'active' },
-      { name: 'Hendra Pratama', email: 'hendra@panca.test', password: 'password', role: 'employee', positionId: 5, joinDate: '2022-02-20', phone: '081234567898', address: 'Jl. Veteran No. 55, Palembang', status: 'active' },
-      { name: 'Maya Sari', email: 'maya@panca.test', password: 'password', role: 'employee', positionId: 7, joinDate: '2022-08-10', phone: '081234567899', address: 'Jl. Jendral Ahmad Yani No. 77, Palembang', status: 'active' },
-      { name: 'Bambang Susilo', email: 'bambang@panca.test', password: 'password', role: 'employee', positionId: 6, joinDate: '2023-03-01', phone: '081234567800', address: 'Jl. Kolonel Atmo No. 99, Palembang', status: 'active' },
+    const usersData = [
+      { name: 'Administrator', email: 'admin@panca.test', password: 'password', role: 'admin', positionId: 8, joinDate: new Date('2020-01-01'), phone: '081234567890', address: 'Jl. Admin No. 1, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Budi Santoso', email: 'budi@panca.test', password: 'password', role: 'employee', positionId: 1, joinDate: new Date('2021-03-15'), phone: '081234567891', address: 'Jl. Merdeka No. 10, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Siti Aminah', email: 'siti@panca.test', password: 'password', role: 'employee', positionId: 3, joinDate: new Date('2022-06-10'), phone: '081234567892', address: 'Jl. Pahlawan No. 25, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Rudi Hartono', email: 'rudi@panca.test', password: 'password', role: 'employee', positionId: 6, joinDate: new Date('2023-01-20'), phone: '081234567893', address: 'Jl. Sudirman No. 50, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Dewi Lestari', email: 'dewi@panca.test', password: 'password', role: 'employee', positionId: 9, joinDate: new Date('2023-05-05'), phone: '081234567894', address: 'Jl. Gatot Subroto No. 15, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Joko Anwar', email: 'joko@panca.test', password: 'password', role: 'employee', positionId: 10, joinDate: new Date('2023-11-01'), phone: '081234567895', address: 'Jl. Ahmad Yani No. 30, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Andi Wijaya', email: 'andi@panca.test', password: 'password', role: 'employee', positionId: 2, joinDate: new Date('2020-06-15'), phone: '081234567896', address: 'Jl. Diponegoro No. 42, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Rina Kusuma', email: 'rina@panca.test', password: 'password', role: 'employee', positionId: 4, joinDate: new Date('2021-09-01'), phone: '081234567897', address: 'Jl. Kartini No. 18, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Hendra Pratama', email: 'hendra@panca.test', password: 'password', role: 'employee', positionId: 5, joinDate: new Date('2022-02-20'), phone: '081234567898', address: 'Jl. Veteran No. 55, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Maya Sari', email: 'maya@panca.test', password: 'password', role: 'employee', positionId: 7, joinDate: new Date('2022-08-10'), phone: '081234567899', address: 'Jl. Jendral Ahmad Yani No. 77, Palembang', status: 'active', avatar: null, createdAt: new Date() },
+      { name: 'Bambang Susilo', email: 'bambang@panca.test', password: 'password', role: 'employee', positionId: 6, joinDate: new Date('2023-03-01'), phone: '081234567800', address: 'Jl. Kolonel Atmo No. 99, Palembang', status: 'active', avatar: null, createdAt: new Date() },
     ];
 
     usersData.forEach(u => {
