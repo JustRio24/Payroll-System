@@ -196,16 +196,16 @@ CREATE TABLE activity_logs (
 -- DATA DUMMY: Positions (Jabatan)
 -- ============================================
 INSERT INTO positions (title, hourly_rate, description) VALUES
-('Kepala Proyek Manajer', 75000, 'Manajer proyek konstruksi senior'),
-('Manajer', 60000, 'Manajer divisi'),
-('Arsitek', 60000, 'Desain dan perencanaan bangunan'),
-('Wakil Kepala Proyek', 50000, 'Asisten kepala proyek'),
-('Kepala Pengawasan', 45000, 'Kepala tim pengawasan lapangan'),
-('Staff Pengawasan', 35000, 'Staff pengawasan lapangan'),
+('Project Manager', 75000, 'Senior construction project manager'),
+('Manager', 60000, 'Division manager'),
+('Architect', 60000, 'Building design and planning'),
+('Deputy Project Manager', 50000, 'Assistant to the project manager'),
+('Head of Supervision', 45000, 'Head of field supervision team'),
+('Supervision Staff', 35000, 'Field supervision staff'),
 ('CMO', 50000, 'Chief Marketing Officer'),
-('Admin', 30000, 'Staff administrasi'),
-('Staff Marketing', 30000, 'Staff pemasaran'),
-('OB', 12000, 'Office Boy');
+('Admin', 30000, 'Administrative staff'),
+('Marketing Staff', 30000, 'Marketing staff'),
+('Office Assistant', 12000, 'Office support and cleaning staff');
 
 -- ============================================
 -- DATA DUMMY: Users (Pengguna)
@@ -232,31 +232,31 @@ INSERT INTO users (name, email, password, role, position_id, join_date, phone, a
 -- ============================================
 INSERT INTO config (`key`, value, description) VALUES
 -- Company Info
-('companyName', 'PT Panca Karya Utama', 'Nama perusahaan'),
-('companyAddress', 'Jl. Konstruksi No. 123, Palembang, Sumatera Selatan', 'Alamat perusahaan'),
-('companyPhone', '+62 711 123456', 'Telepon perusahaan'),
-('companyEmail', 'info@pancakaryautama.co.id', 'Email perusahaan'),
-('companyWebsite', 'www.pancakaryautama.co.id', 'Website perusahaan'),
-('vision', 'Menjadi perusahaan konstruksi terkemuka dan terpercaya di Indonesia yang mengutamakan kualitas, inovasi, dan kepuasan pelanggan.', 'Visi perusahaan'),
-('mission', 'Memberikan layanan konstruksi berkualitas tinggi dengan mengutamakan keselamatan kerja, ketepatan waktu, dan efisiensi biaya.', 'Misi perusahaan'),
-('history', 'PT Panca Karya Utama didirikan pada tahun 2010 di Palembang. Berawal dari sebuah kontraktor kecil, perusahaan telah berkembang menjadi salah satu kontraktor terkemuka di Sumatera Selatan dengan berbagai proyek besar di bidang konstruksi sipil, gedung, dan infrastruktur.', 'Sejarah perusahaan'),
+('companyName', 'PT Panca Karya Utama', 'Company Name'),
+('companyAddress', 'Jl. Konstruksi No. 123, Palembang, South Sumatra', 'Company Address'),
+('companyPhone', '+62 711 123456', 'Company Phone'),
+('companyEmail', 'info@pancakaryautama.co.id', 'Company Email'),
+('companyWebsite', 'www.pancakaryautama.co.id', 'Company Website'),
+('vision', 'To become a leading and trusted construction company in Indonesia that prioritizes quality, innovation, and customer satisfaction.', 'Company Vision'),
+('mission', 'To provide high-quality construction services by prioritizing work safety, punctuality, and cost efficiency.', 'Company Mission'),
+('history', 'PT Panca Karya Utama was established in 2010 in Palembang. Starting as a small contractor, the company has grown into one of the leading contractors in South Sumatra with various major projects in civil construction, buildings, and infrastructure.', 'Company History'),
 -- Geofence Settings
-('officeLat', '-2.9795731113284303', 'Latitude kantor untuk geofence'),
-('officeLng', '104.73111003716011', 'Longitude kantor untuk geofence'),
-('geofenceRadius', '100', 'Radius geofence dalam meter'),
+('officeLat', '-2.9795731113284303', 'Office latitude for geofence'),
+('officeLng', '104.73111003716011', 'Office longitude for geofence'),
+('geofenceRadius', '100', 'Geofence radius in meters'),
 -- Work Schedule Settings
-('work_start_time', '08:00', 'Jam mulai kerja (HH:MM)'),
-('work_end_time', '17:00', 'Jam selesai kerja (HH:MM)'),
-('late_tolerance_minutes', '10', 'Toleransi keterlambatan dalam menit'),
-('break_duration_minutes', '60', 'Durasi istirahat dalam menit'),
+('work_start_time', '08:00', 'Work start time (HH:MM)'),
+('work_end_time', '17:00', 'Work end time (HH:MM)'),
+('late_tolerance_minutes', '10', 'Late tolerance in minutes'),
+('break_duration_minutes', '60', 'Break duration in minutes'),
 -- Overtime Rates
-('overtime_rate_first_hour', '1.5', 'Multiplier lembur jam pertama'),
-('overtime_rate_next_hours', '2.0', 'Multiplier lembur jam berikutnya'),
+('overtime_rate_first_hour', '1.5', 'Overtime multiplier for the first hour'),
+('overtime_rate_next_hours', '2.0', 'Overtime multiplier for subsequent hours'),
 -- Deduction Rates
-('late_penalty_per_minute', '2000', 'Potongan keterlambatan per menit (Rupiah)'),
-('bpjs_kesehatan_rate', '0.01', 'Rate BPJS Kesehatan (1%)'),
-('bpjs_ketenagakerjaan_rate', '0.02', 'Rate BPJS Ketenagakerjaan JHT (2%)'),
-('pph21_rate', '0.05', 'Rate PPh 21 (5%)');
+('late_penalty_per_minute', '2000', 'Late penalty per minute (IDR)'),
+('bpjs_kesehatan_rate', '0.01', 'BPJS Health rate (1%)'),
+('bpjs_ketenagakerjaan_rate', '0.02', 'BPJS Employment JHT rate (2%)'),
+('pph21_rate', '0.05', 'Income Tax (PPh 21) rate (5%)');
 
 -- ============================================
 -- PROSEDUR: Generate Attendance Data
