@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useApp } from "@/lib/store";
+// 1. Pastikan mengambil 'user' dari store untuk mengecek role yang sedang login
+import { useApp } from "@/lib/store"; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,8 @@ import { Link } from "wouter";
 import { CheckCircle } from "lucide-react";
 
 export default function PayrollList() {
-  const { payrolls, users, generatePayroll, finalizePayroll } = useApp();
+  // 2. Tambahkan 'user' di sini
+  const { payrolls, users, generatePayroll, finalizePayroll, user } = useApp();
   const [period, setPeriod] = useState(format(new Date(), "yyyy-MM"));
   const [showBonusDialog, setShowBonusDialog] = useState(false);
   const [manualBonuses, setManualBonuses] = useState<Record<number, number>>({});
@@ -66,16 +68,23 @@ export default function PayrollList() {
             </SelectContent>
           </Select>
           
-          <Button onClick={handleOpenBonusDialog} variant="outline" data-testid="button-bonus-dialog">
-            <Gift className="w-4 h-4 mr-2" /> With Bonus
-          </Button>
-          <Button onClick={handleQuickGenerate} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-generate-payroll">
-            <PlayCircle className="w-4 h-4 mr-2" /> Generate
-          </Button>
+          {/* 3. LOGIC UTAMA: Hanya tampilkan tombol jika role adalah 'finance' */}
+          {user?.role === 'finance' && (
+            <>
+              <Button onClick={handleOpenBonusDialog} variant="outline" data-testid="button-bonus-dialog">
+                <Gift className="w-4 h-4 mr-2" /> With Bonus
+              </Button>
+              <Button onClick={handleQuickGenerate} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-generate-payroll">
+                <PlayCircle className="w-4 h-4 mr-2" /> Generate
+              </Button>
+            </>
+          )}
+
         </div>
       </div>
 
       <Card className="border-slate-200 shadow-sm">
+        {/* ... (sisa kode Card dan Table sama persis seperti sebelumnya) ... */}
         <CardHeader>
            <CardTitle>Payroll Records - {format(new Date(period + "-01"), "MMMM yyyy")}</CardTitle>
            <CardDescription>
@@ -98,14 +107,14 @@ export default function PayrollList() {
             </TableHeader>
             <TableBody>
               {filteredPayrolls.map((payroll) => {
-                const user = users.find(u => u.id === payroll.userId);
+                const userItem = users.find(u => u.id === payroll.userId);
                 const totalDeductions = Object.values(payroll.deductions).reduce((a, b) => a + b, 0);
                 
                 return (
                   <TableRow key={payroll.id} data-testid={`row-payroll-${payroll.id}`}>
                     <TableCell className="font-medium">
-                       <div>{user?.name}</div>
-                       <div className="text-xs text-slate-500">{user?.position}</div>
+                       <div>{userItem?.name}</div>
+                       <div className="text-xs text-slate-500">{userItem?.position}</div>
                     </TableCell>
                     <TableCell className="text-right">{formatIDR(payroll.basicSalary)}</TableCell>
                     <TableCell className="text-right text-green-600">+{formatIDR(payroll.overtimePay)}</TableCell>
@@ -119,7 +128,8 @@ export default function PayrollList() {
                     </TableCell>
                     <TableCell className="text-right">
                        <div className="flex justify-end gap-1">
-                         {payroll.status === 'draft' && (
+                         {/* Opsi tambahan: Tombol Finalize juga biasanya hanya untuk finance */}
+                         {payroll.status === 'draft' && user?.role === 'finance' && (
                            <Button 
                              variant="ghost" 
                              size="icon" 
@@ -144,7 +154,7 @@ export default function PayrollList() {
               {filteredPayrolls.length === 0 && (
                  <TableRow>
                    <TableCell colSpan={8} className="text-center py-12 text-slate-400">
-                      No payroll records found for this period. Click "Generate" to calculate.
+                      No payroll records found for this period. {user?.role === 'finance' ? 'Click "Generate" to calculate.' : ''}
                    </TableCell>
                  </TableRow>
               )}
@@ -153,42 +163,45 @@ export default function PayrollList() {
         </CardContent>
       </Card>
 
-      <Dialog open={showBonusDialog} onOpenChange={setShowBonusDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Manual Bonus Input</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-slate-500 mb-4">
-            Enter bonus amounts for each employee for {format(new Date(period + "-01"), "MMMM yyyy")}
-          </p>
-          <ScrollArea className="max-h-[300px] pr-4">
-            <div className="space-y-3">
-              {users.filter(u => u.role !== 'admin').map(emp => (
-                <div key={emp.id} className="flex items-center gap-3">
-                  <Label className="flex-1 text-sm">{emp.name}</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    className="w-32 text-right"
-                    value={manualBonuses[emp.id] || ''}
-                    onChange={e => setManualBonuses(prev => ({
-                      ...prev,
-                      [emp.id]: parseInt(e.target.value) || 0
-                    }))}
-                    data-testid={`input-bonus-${emp.id}`}
-                  />
+      {/* Dialog juga hanya perlu dirender jika user adalah finance (untuk keamanan tambahan) */}
+      {user?.role === 'finance' && (
+        <Dialog open={showBonusDialog} onOpenChange={setShowBonusDialog}>
+            <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Manual Bonus Input</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-slate-500 mb-4">
+                Enter bonus amounts for each employee for {format(new Date(period + "-01"), "MMMM yyyy")}
+            </p>
+            <ScrollArea className="max-h-[300px] pr-4">
+                <div className="space-y-3">
+                {users.filter(u => u.role !== 'admin').map(emp => (
+                    <div key={emp.id} className="flex items-center gap-3">
+                    <Label className="flex-1 text-sm">{emp.name}</Label>
+                    <Input
+                        type="number"
+                        placeholder="0"
+                        className="w-32 text-right"
+                        value={manualBonuses[emp.id] || ''}
+                        onChange={e => setManualBonuses(prev => ({
+                        ...prev,
+                        [emp.id]: parseInt(e.target.value) || 0
+                        }))}
+                        data-testid={`input-bonus-${emp.id}`}
+                    />
+                    </div>
+                ))}
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBonusDialog(false)}>Cancel</Button>
-            <Button onClick={handleGenerate} className="bg-orange-500 hover:bg-orange-600" data-testid="button-confirm-generate">
-              Generate Payroll
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </ScrollArea>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setShowBonusDialog(false)}>Cancel</Button>
+                <Button onClick={handleGenerate} className="bg-orange-500 hover:bg-orange-600" data-testid="button-confirm-generate">
+                Generate Payroll
+                </Button>
+            </DialogFooter>
+            </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

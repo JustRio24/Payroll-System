@@ -8,9 +8,13 @@ import { Check, X, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminLeaves() {
-  const { leaves, users, approveLeave } = useApp();
+  // 1. Ambil 'user' dari store
+  const { leaves, users, approveLeave, user } = useApp();
 
   const sortedLeaves = [...leaves].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
+  // Helper: Cek apakah user BUKAN finance (jadi boleh lihat action)
+  const showAction = user?.role !== 'finance';
 
   return (
     <div className="space-y-6">
@@ -36,24 +40,27 @@ export default function AdminLeaves() {
                 <TableHead>Reason</TableHead>
                 <TableHead>Attachment</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {/* 2. Hide Header Action jika role finance */}
+                {showAction && (
+                  <TableHead className="text-right">Action</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedLeaves.map((leave) => {
-                const user = users.find(u => u.id === leave.userId);
+                const userItem = users.find(u => u.id === leave.userId);
                 
                 return (
                   <TableRow key={leave.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.avatar} />
-                          <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={userItem?.avatar} />
+                          <AvatarFallback>{userItem?.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-semibold">{user?.name}</div>
-                          <div className="text-xs text-slate-500">{user?.position}</div>
+                          <div className="font-semibold">{userItem?.name}</div>
+                          <div className="text-xs text-slate-500">{userItem?.position}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -84,24 +91,30 @@ export default function AdminLeaves() {
                         {leave.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                       {leave.status === 'pending' && (
-                         <div className="flex justify-end gap-2">
-                           <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => approveLeave(leave.id, 'approved')}>
-                             <Check className="w-4 h-4" />
-                           </Button>
-                           <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => approveLeave(leave.id, 'rejected')}>
-                             <X className="w-4 h-4" />
-                           </Button>
-                         </div>
-                       )}
-                    </TableCell>
+                    
+                    {/* 3. Hide Cell Action jika role finance */}
+                    {showAction && (
+                      <TableCell className="text-right">
+                        {leave.status === 'pending' && (
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => approveLeave(leave.id, 'approved')}>
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => approveLeave(leave.id, 'rejected')}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
+
                   </TableRow>
                 );
               })}
               {sortedLeaves.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-400">
+                  {/* Sesuaikan colSpan: 7 jika ada action, 6 jika tidak */}
+                  <TableCell colSpan={showAction ? 7 : 6} className="text-center py-8 text-slate-400">
                     No leave requests found.
                   </TableCell>
                 </TableRow>

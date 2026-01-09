@@ -9,9 +9,13 @@ import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminAttendance() {
-  const { attendance, users, approveAttendance } = useApp();
+  // 1. Ambil 'user' dari store
+  const { attendance, users, approveAttendance, user } = useApp();
 
   const sortedAttendance = [...attendance].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Helper: Cek apakah boleh menampilkan validasi (bukan finance)
+  const showValidation = user?.role !== 'finance';
 
   return (
     <div className="space-y-6">
@@ -22,10 +26,10 @@ export default function AdminAttendance() {
 
       <Card className="border-slate-200 shadow-sm">
         <CardHeader>
-           <CardTitle>Daily Log</CardTitle>
-           <CardDescription>
-             Recent activity requiring attention
-           </CardDescription>
+            <CardTitle>Daily Log</CardTitle>
+            <CardDescription>
+              Recent activity requiring attention
+            </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -38,24 +42,27 @@ export default function AdminAttendance() {
                 <TableHead>Location</TableHead>
                 <TableHead>Photos</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Validation</TableHead>
+                {/* 2. Hide Header Validation jika finance */}
+                {showValidation && (
+                  <TableHead className="text-right">Validation</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAttendance.map((att) => {
-                const user = users.find(u => u.id === att.userId);
+                const userItem = users.find(u => u.id === att.userId);
                 
                 return (
                   <TableRow key={att.id} className="hover:bg-slate-50">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.avatar || undefined} />
-                          <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={userItem?.avatar || undefined} />
+                          <AvatarFallback>{userItem?.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-semibold">{user?.name}</div>
-                          <div className="text-xs text-slate-500">{user?.position}</div>
+                          <div className="font-semibold">{userItem?.name}</div>
+                          <div className="text-xs text-slate-500">{userItem?.position}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -63,16 +70,16 @@ export default function AdminAttendance() {
                     <TableCell>{att.clockIn ? format(new Date(att.clockIn), "HH:mm") : "-"}</TableCell>
                     <TableCell>{att.clockOut ? format(new Date(att.clockOut), "HH:mm") : "-"}</TableCell>
                     <TableCell>
-                       <div className="flex flex-col gap-1">
-                         <Badge variant="outline" className={`w-fit text-[10px] ${att.isWithinGeofenceIn ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                           IN: {att.isWithinGeofenceIn ? "Valid" : "Outside"}
-                         </Badge>
-                         {att.clockOut && (
-                           <Badge variant="outline" className={`w-fit text-[10px] ${att.isWithinGeofenceOut ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                             OUT: {att.isWithinGeofenceOut ? "Valid" : "Outside"}
-                           </Badge>
-                         )}
-                       </div>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className={`w-fit text-[10px] ${att.isWithinGeofenceIn ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                            IN: {att.isWithinGeofenceIn ? "Valid" : "Outside"}
+                          </Badge>
+                          {att.clockOut && (
+                            <Badge variant="outline" className={`w-fit text-[10px] ${att.isWithinGeofenceOut ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                              OUT: {att.isWithinGeofenceOut ? "Valid" : "Outside"}
+                            </Badge>
+                          )}
+                        </div>
                     </TableCell>
                     <TableCell>
                         <div className="flex gap-2">
@@ -113,18 +120,23 @@ export default function AdminAttendance() {
                         {att.approvalStatus}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                       {att.approvalStatus === 'pending' && (
-                         <div className="flex justify-end gap-2">
-                           <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => approveAttendance(att.id, 'approved')}>
-                             <Check className="w-4 h-4" />
-                           </Button>
-                           <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => approveAttendance(att.id, 'rejected')}>
-                             <X className="w-4 h-4" />
-                           </Button>
-                         </div>
-                       )}
-                    </TableCell>
+                    
+                    {/* 3. Hide Cell Validation (Action Buttons) jika finance */}
+                    {showValidation && (
+                      <TableCell className="text-right">
+                          {att.approvalStatus === 'pending' && (
+                            <div className="flex justify-end gap-2">
+                              <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => approveAttendance(att.id, 'approved')}>
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => approveAttendance(att.id, 'rejected')}>
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
+                      </TableCell>
+                    )}
+
                   </TableRow>
                 );
               })}

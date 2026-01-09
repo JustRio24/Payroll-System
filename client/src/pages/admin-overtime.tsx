@@ -8,9 +8,13 @@ import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminOvertime() {
-  const { overtime, users, approveOvertime } = useApp();
+  // 1. Tambahkan 'user' untuk pengecekan role
+  const { overtime, users, approveOvertime, user } = useApp();
 
   const sortedRequests = [...overtime].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Helper boolean untuk mengecek apakah user BUKAN finance
+  const canApprove = user?.role !== 'finance';
 
   return (
     <div className="space-y-6">
@@ -33,13 +37,17 @@ export default function AdminOvertime() {
                 <TableHead>Duration</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                {/* 2. Hide Header Action jika role finance */}
+                {canApprove && (
+                  <TableHead className="text-right">Action</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedRequests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-10 text-slate-400">
+                  {/* Sesuaikan colspan jika kolom action hilang */}
+                  <TableCell colSpan={canApprove ? 6 : 5} className="text-center py-10 text-slate-400">
                     No overtime requests found
                   </TableCell>
                 </TableRow>
@@ -82,33 +90,38 @@ export default function AdminOvertime() {
                           {req.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        {req.status === 'pending' && (
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="h-8 px-2 text-green-600 hover:bg-green-50 border-green-200"
-                              onClick={() => approveOvertime(req.id, 'approved')}
-                            >
-                              <Check className="w-4 h-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="h-8 px-2 text-red-600 hover:bg-red-50 border-red-200"
-                              onClick={() => approveOvertime(req.id, 'rejected')}
-                            >
-                              <X className="w-4 h-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        )}
-                        {req.status !== 'pending' && (
-                          <span className="text-xs text-slate-400">Processed</span>
-                        )}
-                      </TableCell>
+                      
+                      {/* 3. Hide Cell Action (Button) jika role finance */}
+                      {canApprove && (
+                        <TableCell className="text-right">
+                          {req.status === 'pending' && (
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 px-2 text-green-600 hover:bg-green-50 border-green-200"
+                                onClick={() => approveOvertime(req.id, 'approved')}
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 px-2 text-red-600 hover:bg-red-50 border-red-200"
+                                onClick={() => approveOvertime(req.id, 'rejected')}
+                              >
+                                <X className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                          {req.status !== 'pending' && (
+                            <span className="text-xs text-slate-400">Processed</span>
+                          )}
+                        </TableCell>
+                      )}
+
                     </TableRow>
                   );
                 })
